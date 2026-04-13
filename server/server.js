@@ -10,6 +10,7 @@ import serviceAccountKey from './campus-space-01-firebase-adminsdk-fbsvc-12039c5
 // importing schemas
 import User from "./Schema/User.js";
 import firebaseAdmin from "firebase-admin";
+import admin from "firebase-admin"
 
 
 
@@ -112,7 +113,8 @@ server.post('/signin',(req,res)=>{
             if(!user){
                 return res.status(403).json({"error":"Email not found"});
             }
-            bcrypt.compare(password,user.personal_info.password,(err,result)=>{
+           if(!user.google_auth){
+             bcrypt.compare(password,user.personal_info.password,(err,result)=>{
 
                 if(err){
                     return res.status(403).json({"error":"Error Occured During Login please try again"});
@@ -124,6 +126,9 @@ server.post('/signin',(req,res)=>{
                 }
             })
 
+           }else{
+            return res.status(403).json({"error":"Account is Created using Google. Try with login with Google"})
+           }
 
 
 
@@ -136,33 +141,63 @@ server.post('/signin',(req,res)=>{
 
 })
 
-server.post('/google-auth',async(req,res)=>{
+server.post('/google-auth', async (req, res) => {
 
-    let {access_token}=req.body;
+    let { idToken } = req.body;
+
     getAuth()
-    .verifyIdToken(access_token)
-    .then(async(decodedUser)=>{
-            let{email,name,picture}=decodedUser;
-            picture=picture.replace("s96-c","s384-c")
+    .verifyIdToken(idToken)
+    .then(async (decodedUser) => {
 
-            let user=await User.findOne({"personal_info.email":email}).select("personal_info.fullname personal_info.username personal_info.profile_image google_auth").then((u)=>
-                { 
-                    return u|| null
-                }).catch(err=>{
-                    return res.status(500).json({"error":err.message})
-                })
+        let { email, name, picture } = decodedUser;
+        picture = picture.replace("s96-c", "s384-c");
 
-                if(user){
-                    if(!user.google_auth){
-                        return res.status(403).json({"error": "This eamil is signed Up without Google. please login with password to access the account"})
+        let user = await User.findOne({ "personal_info.email": email })
+        .select("personal_info.fullname personal_info.username personal_info.profile_image google_auth")
+        .then((u) => u || null)
+        .catch(err => {
+            return res.status(500).json({ "error": err.message });
+        });
 
-                    }
-                }else{
-                    
-                }
+        if (user) {
+            // login
+            if (!user.google_auth) {
+                return res.status(403).json({
+                    "error": "This email is signed up without Google. Please login with password."
+                });
+            }
+        } else {
+            // signup
+            let username = await generateUsername(email);
+
+            user = new User({
+                personal_info: {
+                    fullname: name,
+                    email,
+                    profile_image: picture,
+                    username
+                },
+                google_auth: true
+            });
+
+            await user.save()
+            .then((u) => {
+                user = u;
+            })
+            .catch(err => {
+                return res.status(500).json({ "error": err.message });
+            });
+        }
+
+        return res.status(200).json(formatDatatoSend(user));
+
     })
-})
-
+    .catch(err => {
+        return res.status(500).json({
+            "error": "Failed to authenticate. Invalid Firebase ID token."
+        });
+    });
+});
 server.listen(PORT,()=>{
     console.log(`listening on port : http://localhost:${ PORT}`);
 })
