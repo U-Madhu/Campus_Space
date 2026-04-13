@@ -6,7 +6,7 @@ import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import cors from 'cors';
 import { getAuth } from 'firebase-admin/auth';
-import serviceAccountKey from './campus-space-01-firebase-adminsdk-fbsvc-12039c55d0.json' with { type: "json" };
+import serviceAccountKey from './campus-space-01-firebase-adminsdk-fbsvc-864f73cdf1.json' with { type: "json" };
 // importing schemas
 import User from "./Schema/User.js";
 import firebaseAdmin from "firebase-admin";
