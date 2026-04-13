@@ -5,11 +5,11 @@ import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import cors from 'cors';
-
-
-
+import { getAuth } from 'firebase-admin/auth';
+import serviceAccountKey from './campus-space-01-firebase-adminsdk-fbsvc-12039c55d0.json' with { type: "json" };
 // importing schemas
 import User from "./Schema/User.js";
+import firebaseAdmin from "firebase-admin";
 
 
 
@@ -24,6 +24,10 @@ let PORT=3000;
 server.use(express.json());
 server.use(cors());
 
+
+firebaseAdmin.initializeApp({
+    credential: firebaseAdmin.credential.cert(serviceAccountKey)
+})
 
 // connecting databse
 mongoose.connect(process.env.DB_LOCATION,{
@@ -82,12 +86,14 @@ server.post('/signup',(req,res)=>{
 
                     }
                 )
-                user.save().then((u)=>{return res.status(200).json(formatDatatoSend(u )) }).catch(
-
-                    err=>{
-                        if(err.code==11000){
-                            return res.status(500).json({"error":"Email Already exist"})
-                        }
+                user.save().then((u)=>{
+                    
+                    return res.status(200).json(formatDatatoSend(u )) })
+                    
+                    .catch( err=>{
+                                    if(err.code==11000){
+                                        return res.status(500).json({"error":"Email Already exist"})
+                                    }
                         
                         return res.status(500).json({"error":err.message})
                     
@@ -121,7 +127,7 @@ server.post('/signin',(req,res)=>{
 
 
 
-            console.log(user)
+            
             
         }).catch(err=>{
             console.log(err);
@@ -130,6 +136,32 @@ server.post('/signin',(req,res)=>{
 
 })
 
+server.post('/google-auth',async(req,res)=>{
+
+    let {access_token}=req.body;
+    getAuth()
+    .verifyIdToken(access_token)
+    .then(async(decodedUser)=>{
+            let{email,name,picture}=decodedUser;
+            picture=picture.replace("s96-c","s384-c")
+
+            let user=await User.findOne({"personal_info.email":email}).select("personal_info.fullname personal_info.username personal_info.profile_image google_auth").then((u)=>
+                { 
+                    return u|| null
+                }).catch(err=>{
+                    return res.status(500).json({"error":err.message})
+                })
+
+                if(user){
+                    if(!user.google_auth){
+                        return res.status(403).json({"error": "This eamil is signed Up without Google. please login with password to access the account"})
+
+                    }
+                }else{
+                    
+                }
+    })
+})
 
 server.listen(PORT,()=>{
     console.log(`listening on port : http://localhost:${ PORT}`);
