@@ -3,3 +3,7 @@ campus-space-01-firebase-adminsdk-fbsvc-864f73cdf1.json
 node_modules
 server/*.json
 .env
+frontend/.env
+frontend/.env.*
+server/.env
+server/.env.*

@@ -13,6 +13,9 @@ import firebaseAdmin from "firebase-admin";
 import admin from "firebase-admin"
 
 
+//aws
+import aws from "aws-sdk";
+
 
 //regex 
 let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -34,6 +37,15 @@ firebaseAdmin.initializeApp({
 mongoose.connect(process.env.DB_LOCATION,{
     autoIndex:true
 });
+
+// setting aws s3 bucket
+
+const s3=new aws.S3({
+    region:"ap-south-1",
+    accessKeyId:process.env.AWS_ACCESS_KEY,
+    secretAccessKey:process.env.AWS_SCRET_ACCESS_KEY,
+
+})
 
 
 
