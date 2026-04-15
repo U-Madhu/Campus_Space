@@ -47,6 +47,18 @@ const s3=new aws.S3({
 
 })
 
+const generateUploadURL=async()=>{
+    const date=new Date();
+    const imageName=`${nanoid()}-${date.getTime()}.jpeg`;
+    return await s3.getSignedUrlPromise('putObject',{
+        Bucket:'campus-space-image-bucket' ,
+        Key:imageName,
+        Expires:1000,
+        ContentType:"image/jpeg"
+
+
+    })
+}
 
 
 const formatDatatoSend =(user)=>{
@@ -69,6 +81,17 @@ const generateUsername = async(email) => {
     return username;
 
 }
+
+// upload image url route
+
+server.get('/get-upload-url',(req,res)=>{
+    generateUploadURL().then(url=>res.status(200).json({uploadURL:url}))
+    .catch(err=>{
+        console.log(err.message);
+        return res.status(500).json({error:err.message})
+
+    })
+})
 
 server.post('/signup',(req,res)=>{
    let {fullname,email,password}=req.body;
