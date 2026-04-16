@@ -9,8 +9,9 @@ import { getAuth } from 'firebase-admin/auth';
 import serviceAccountKey from './campus-space-01-firebase-adminsdk-fbsvc-864f73cdf1.json' with { type: "json" };
 // importing schemas
 import User from "./Schema/User.js";
+import Blog from './Schema/Blog.js'
 import firebaseAdmin from "firebase-admin";
-import admin from "firebase-admin"
+
 
 
 //aws
@@ -60,6 +61,21 @@ const generateUploadURL=async()=>{
     })
 }
 
+const verifyJWT=(req,res,next)=>{
+    const authHeader=req.headers['authorization'];
+    const token=authHeader && authHeader.split(" ")[1];
+    if(token==null){
+        return res.status(401).json({error:"No access token"})
+    }
+    jwt.verify(token,process.env.SECRET_ACCESS_KEY,(err,user)=>{
+        if(err){
+            return res.status(403).json({error:"Access token is invalid"})
+        }
+        req.user=user.id;
+        next();
+    })
+
+}
 
 const formatDatatoSend =(user)=>{
             const access_token=jwt.sign({id:user._id},process.env.SECRET_ACCESS_KEY)
@@ -81,6 +97,8 @@ const generateUsername = async(email) => {
     return username;
 
 }
+
+
 
 // upload image url route
 
@@ -114,6 +132,9 @@ server.post('/signup',(req,res)=>{
                 });
             }
             bcrypt.hash(password,10,async(err,hashed_password)=>{
+                    if (err) { // ✅ FIXED
+                             return res.status(500).json({ error: "Hashing failed" });
+                             }
 
                     let username=await generateUsername(email);
                     let user= new User({
@@ -233,6 +254,50 @@ server.post('/google-auth', async (req, res) => {
         });
     });
 });
+
+server.post('/create-blog',verifyJWT,(req,res)=>{
+    
+    let authorId=req.user;
+
+    let {title,des,banner,tags,content,draft}=req.body;
+    if(!title.length){
+        return res.status(403).json({error:"You must provid a title to publish the blog"})
+    }
+    if(!des.length || des.length>200){
+        return res.status(403).json({error:"You must provide blog description under 200 characters"})
+    }
+    // if(!banner.length){
+    //     return res.status(403).json({error:"You must provide blog banner to publish it"})
+    // }
+    if(!content.blocks.length){
+         return res.status(403).json({error:"There must be some bloog content to publish it"})
+    }
+    if(!tags.length || tags.length>10){
+        return res.status(403).json({error:"Provide Tags in order to publish the blog,"})
+    }
+    tags=tags.map(tag=>tag.toLowerCase());
+    let blogId=title.replace(/[^a-zA-Z0-9]/g,' ').replace(/\s+/g,'-').trim()+nanoid();
+
+    let blog=new Blog({
+        title,des,banner,content,tags,author:authorId,blog_id:blogId,draft:Boolean(draft)
+    })
+
+    blog.save().then(blog=>{
+        let incrementVal =draft?0:1;
+        User.findOneAndUpdate({_id:authorId},{$inc:{"account_info.total_posts":incrementVal},$push:{"blogs":blog._id}}).
+        then(user=>{
+            return res.status(200).json({id:blogId})
+        })
+        .catch(err=>{
+            return res.status(500).json({error:"Failed to update total posts number"})
+        })
+    }).catch(err=>{
+        return res.status(500).json({error:err.message})
+    })
+
+
+
+})
 server.listen(PORT,()=>{
     console.log(`listening on port : http://localhost:${ PORT}`);
 })
