@@ -261,20 +261,23 @@ server.post('/create-blog',verifyJWT,(req,res)=>{
 
     let {title,des,banner,tags,content,draft}=req.body;
     if(!title.length){
-        return res.status(403).json({error:"You must provid a title to publish the blog"})
+        return res.status(403).json({error:"You must provid a title"})
     }
-    if(!des.length || des.length>200){
+    if(!draft){
+        if(!des.length || des.length>200){
         return res.status(403).json({error:"You must provide blog description under 200 characters"})
     }
-    // if(!banner.length){
-    //     return res.status(403).json({error:"You must provide blog banner to publish it"})
-    // }
+    if(!banner.length){
+        return res.status(403).json({error:"You must provide blog banner to publish it"})
+    }
     if(!content.blocks.length){
          return res.status(403).json({error:"There must be some bloog content to publish it"})
     }
     if(!tags.length || tags.length>10){
         return res.status(403).json({error:"Provide Tags in order to publish the blog,"})
     }
+    }
+    
     tags=tags.map(tag=>tag.toLowerCase());
     let blogId=title.replace(/[^a-zA-Z0-9]/g,' ').replace(/\s+/g,'-').trim()+nanoid();
 
