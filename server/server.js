@@ -303,7 +303,7 @@ server.get("/trending-blogs",(req,res)=>{
 
 server.post("/search-blogs",(req,res)=>{
 
-    let {tag,query,page}=req.body;
+    let {tag,query,page,author}=req.body;
 
     let findQuery;
     if(tag){
@@ -313,6 +313,8 @@ server.post("/search-blogs",(req,res)=>{
         findQuery={draft:false,title:new RegExp(query,'i')} 
 
 
+    }else if(author){
+        findQuery={author,draft:false}
     }
 
     let maxLimit=3;
@@ -337,7 +339,7 @@ server.post("/search-blogs",(req,res)=>{
 
 
 server.post("/search-blogs-count",(req,res)=>{
-    let {tag,page,query}=req.body;
+    let {tag,page,query,author}=req.body;
     let findQuery;
     if(tag){
         findQuery= {tags:tag,draft:false};
@@ -346,6 +348,8 @@ server.post("/search-blogs-count",(req,res)=>{
         findQuery={draft:false,title:new RegExp(query,'i')} 
 
 
+    }else if(author){
+        findQuery={author,draft:false}
     }
 
     Blog.countDocuments(findQuery)
@@ -371,6 +375,23 @@ server.post('/search-users',(req,res)=>{
             return res.status(500).json({error:err.message})
         })
 
+})
+
+server.post('/get-profile',async (req,res)=>{
+
+    let {username}=req.body;
+    console.log("Searching for:", username);
+
+    await User.findOne({ "personal_info.username":username})
+    .select("-personal_info.password -google_auth -updatedAt -blogs")
+    .then(user=>{
+        console.log("Found user:", user);
+        return res.status(200).json(user)
+    })
+    .catch(err=>{
+        res.status(500).json({error:err.message})
+    })
+    
 })
 
 server.post('/create-blogs',verifyJWT,(req,res)=>{
