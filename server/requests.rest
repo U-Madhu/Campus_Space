@@ -12,7 +12,7 @@
 
 
 
-POST http://localhost:3000/get-profile
+POST http://localhost:3000/signin
 Content-Type: application/json
 
 {

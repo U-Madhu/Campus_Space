@@ -261,6 +261,49 @@ server.post('/google-auth', async (req, res) => {
     });
 });
 
+server.post("/change-password",verifyJWT,(req,re)=>{
+    let {currentPassword,newPassword}=req.body;
+
+        if(!passwordRegex.test(currentPassword)||!passwordRegex.test(newPassword)){
+                    return res.status(403).json({
+                    "error" : "Password should be 6-20 letter including long with numeric,1 lowercase and 1 uppercase letter"
+                })
+         }
+       User.findOne({_id:req.user}) 
+       .then((user)=>{
+
+            if(user.google_auth){
+                 return res.status(403).json({error:"You cant change the accounts password because you logged in throgh google"})
+
+            }
+
+            bcrypt.compare(currentPassword,user.personal_info.password,(err,res)=>{
+                if(err){
+                    return res.status(500).json({error:"Some error occured while changing the password ,please try again later"})
+                }
+                if(!result){
+                    return res.status(403).json({error:"Incorrect current password"})
+                }
+
+                bcrypt.hash(newPassword,10,(err,hashed_password)=>{
+                    user.findOneAndUpdate({_id:req.user},{"personal_info.password":hashed_password})
+                    .then((u)=>{
+                        return res.status(200).json({status:'password changed'})
+                    })
+                    .catch(err=>{
+                        return res.status(500).json({error:'some error occured while saving new password.please try again later'})
+                    })
+                })
+            })
+       })
+       .catch(err=>{
+            return res.status(500).json({error:"User not found"})
+       }) 
+        
+    
+})
+
+
 
 server.post('/latest-blogs',(req,res)=>{
     let {page=1}=req.body;
@@ -628,9 +671,10 @@ server.post("/get-replies",(req,res)=>{
     comment.findOne({_id})
     .populate({
         path:"children",
-        option:{
-            limit:skip,
-        sort:{'commentedAt':-1}
+        options:{
+            limit:maxLimit,
+            skip:skip,
+            sort:{'commentedAt':-1}
     },
     populate:{
         path:'commented_By',
