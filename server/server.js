@@ -9,7 +9,7 @@ import { getAuth } from 'firebase-admin/auth';
 import serviceAccountKey from './campus-space-01-firebase-adminsdk-fbsvc-864f73cdf1.json' with { type: "json" };
 import Notification from './Schema/Notification.js'
 
-import Commeng from './Schema/Comment.js'
+import Comment from './Schema/Comment.js'
 
 // importing schemas
 import User from "./Schema/User.js";
@@ -20,9 +20,11 @@ import firebaseAdmin from "firebase-admin";
 
 //aws
 import aws from "aws-sdk";
-import CommentField from "../frontend/src/components/comment-field.component.jsx";
+//import CommentField from "../frontend/src/components/comment-field.component.jsx";
 import { populate } from "dotenv";
-import { verify } from "jsonwebtoken";
+import pkg from 'jsonwebtoken';
+const { verify } = pkg;
+// import { verify } from "jsonwebtoken";
 
 
 //regex 
@@ -262,7 +264,7 @@ server.post('/google-auth', async (req, res) => {
     });
 });
 
-server.post("/change-password",verifyJWT,(req,re)=>{
+server.post("/change-password",verifyJWT,(req,res)=>{
     let {currentPassword,newPassword}=req.body;
 
         if(!passwordRegex.test(currentPassword)||!passwordRegex.test(newPassword)){
@@ -282,7 +284,7 @@ server.post("/change-password",verifyJWT,(req,re)=>{
                 if(err){
                     return res.status(500).json({error:"Some error occured while changing the password ,please try again later"})
                 }
-                if(!result){
+                if(!res){
                     return res.status(403).json({error:"Incorrect current password"})
                 }
 
@@ -517,7 +519,7 @@ server.post('/create-blogs',verifyJWT,(req,res)=>{
     
     let authorId=req.user;
 
-    let {title,des,banner,tags,content,draft}=req.body;
+    let {id,title,des,banner,tags,content,draft}=req.body;
     if(!title.length){
         return res.status(403).json({error:"You must provid a title"})
     }
@@ -580,7 +582,7 @@ server.post("/get-blog",(req,res)=>{
     .populate("author","personal_info.fullname personal_info.profile_img")
     .select("title des content banner activity publishedAt blog_id tags")
     .then(blog=>{
-        User.findOneAndUpdate({"personal_info.username": blog.author.personal_info.username},{$inc :{"account_info.total_reads":incremenVal
+        User.findOneAndUpdate({"personal_info.username": blog.author.personal_info.username},{$inc :{"account_info.total_reads":incrementVal
         }})
         .catch(err=>{
             return res.status(500).json({error:err.message})
@@ -621,7 +623,7 @@ server.post("/like-blog",verifyJWT,(req,res)=>{
             })
 
         }else{
-            Notification.findOneAndDelete({usee:user_id,blog:_id,type:"like"})
+            Notification.findOneAndDelete({user:user_id,blog:_id,type:"like"})
             .then(data=>{
                 return res.status(200).json({liked_by_user:false})
             })
@@ -636,7 +638,7 @@ server.post("/like-blog",verifyJWT,(req,res)=>{
 server.post("/isliked-by-user",verifyJWT,(req,res)=>{
     let user_id=req.user;
     let{_id}=req.body;
-    Notification.exists({user:user_id,type:"Like",blog:_id})
+    Notification.exists({user:user_id,type:"like",blog:_id})
     .then(result=>{
         return res.status(200).json({result})
     })
@@ -738,7 +740,7 @@ server.post("/get-replies",(req,res)=>{
 
     let maxLimit=5;
 
-    comment.findOne({_id})
+    Comment.findOne({_id})
     .populate({
         path:"children",
         options:{
@@ -747,7 +749,7 @@ server.post("/get-replies",(req,res)=>{
             sort:{'commentedAt':-1}
     },
     populate:{
-        path:'commented_By',
+        path:'commented_by',
         select:"personal_info.profile_img personal_info.username personal_info.fullname"
 
     },
@@ -765,9 +767,9 @@ server.post("/get-replies",(req,res)=>{
     })
 })
 
-const deleteCommment=(_id)=>{
+const deleteComment=(_id)=>{
 
-    Comment.findOne({_id})
+    Comment.findOneAndDelete({_id})
     .then(comment=>{
         if(comment.parent){
             Comment.findOneAndUpdate({_id:comment.parent},{$pull:{children:_id}})
@@ -777,14 +779,14 @@ const deleteCommment=(_id)=>{
         Notification.findOneAndDelete({comment:_id})
         .then(notification=>console.log('comment notification deleted'))
 
-        Notification.findOneAndDelete({reply:_id})
+        Notification.findOneAndDelete({replied_on_comment:_id})
         .then(notification=>console.log('reply notification deleted'))
 
         Blog.findOneAndUpdate({_id:comment.blog_id},{$pull:{comments:_id},$inc:{"activity.total_comments":-1,"activity.total_parent_comments":comment.parent?0:-1}})
         .then(blog=>{
             if(comment.children.length){
                 comment.children.map(replies=>{
-                    deleteCommment(replies)
+                    deleteComment(replies)
 
                 })
             }
@@ -808,11 +810,11 @@ server.post("/delete-comment",verifyJWT,(req,res)=>{
     .then(comment=>{
         if(user_id==comment.commented_by || user_id==comment.blog_author){
 
-            deleteCommment(_id);
+            deleteComment(_id);
             return res.status(200).json({status:'done'});
         }
         else{
-            returncres.status(403).json({error:"You can not delete this comment"})
+            return res.status(403).json({error:"You can not delete this comment"})
         }
     })
 

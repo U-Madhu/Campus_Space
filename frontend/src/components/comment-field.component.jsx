@@ -7,7 +7,22 @@ import { UserContext } from "../App";
 
 const CommentField=({action,index=undefined,replyingTo=undefined,setReplying=false})=>{
 
-    let {blog,blog:{_id,author:{_id:blog_author},comments,comments:{resultscommentsArr},activity,activity:{total_comments,total_parent_comments}},setBlog,setTotalParentCommentLoaded}=useContext(BlogContext)
+    // let {blog,blog:{_id,author:{_id:blog_author},comments,comments:{resultscommentsArr},activity,activity:{total_comments,total_parent_comments}},setBlog,setTotalParentCommentLoaded}=useContext(BlogContext)
+    let {
+  blog,
+  blog:{
+    _id,
+    author:{_id:blog_author},
+    comments,
+    activity
+  },
+  setBlog,
+  setTotalParentCommentLoaded
+} = useContext(BlogContext);
+
+let { results: commentsArr } = comments;
+let { total_comments, total_parent_comments } = activity;
+
     let {userAuth:{access_token,username,fullname,profile_img}}=useContext(UserContext);
 
     const [comment,setComment]=useState("");
@@ -29,7 +44,7 @@ const CommentField=({action,index=undefined,replyingTo=undefined,setReplying=fal
         .then(({data})=>{
            // console.log(data);
            setComment("");
-           data.commentedBy={personal_info:{username,profile_img,fullname}}
+           data.commented_by={personal_info:{username,profile_img,fullname}}
 
            let newCommentArr;
 
@@ -45,6 +60,7 @@ const CommentField=({action,index=undefined,replyingTo=undefined,setReplying=fal
             commentsArr.splice(index+1,0,data);
 
             setReplying(false);
+            newCommentArr=commentsArr;
 
 
 

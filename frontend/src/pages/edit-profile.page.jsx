@@ -19,13 +19,13 @@ const EditProfile =()=>{
 
     let editProfileForm=useRef();
 
-    const [profile,setProfile]=userState(profileDataStructure);
+    const [profile,setProfile]=useState(profileDataStructure);
     const [loading,setLoading]=useState(true);
 
     const[charactersLeft,setCharactersLeft]=useState(bioLimit);
     const [updatedProfileImg,setUpdatedProfileImg]=useState(null);
     
-    let {personal_info:{fullname,username:profile_username,profile_img,email,bio}}=profile;
+    let {social_links,personal_info:{fullname,username:profile_username,profile_img,email,bio}}=profile;
 
 
         useEffect(()=>{
@@ -35,6 +35,7 @@ const EditProfile =()=>{
                 .then(({data})=>{
                     //console.log(data);
                     setProfile(data);
+                    
                     setLoading(false);
 
 
@@ -71,13 +72,13 @@ const EditProfile =()=>{
             e.preventDefault();
             if(updatedProfileImg){
                 let loadingToast=toast.loading("Uploading...")
-                e.targtet.setAttribute("disabled",true);
+                e.target.setAttribute("disabled",true);
 
                 uploadImage(updatedProfileImg)
                 .then(url=>{
                     //console.log(url);
                     if(url){
-                        axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/update-profile-image",{url},{
+                        axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/update-profile-img",{url},{
                             headers:{
                                 'Authorization':`Bearer ${access_token}`
                             }
@@ -168,8 +169,10 @@ const EditProfile =()=>{
 
         return (
             <AnimationWrapper>
-                loading?<Loader/>:
-                <form ref={editProfileForm}>
+               { 
+               loading?(<Loader/>)
+               :
+                (<form ref={editProfileForm}>
                     <Toaster/>
                      
                      <h1 className="max-md:hidden"> Edit Profile</h1>
@@ -189,7 +192,7 @@ const EditProfile =()=>{
                                     <img ref={profileImgEle} src={profile_img}/>
                                 </label>
 
-                                <input type="file" id="uploading" accept=".jpeg, .png, .jpg" hidden onChange={handleImagePreview}/>
+                                <input type="file" id="uploadImg" accept=".jpeg, .png, .jpg" hidden onChange={handleImagePreview}/>
 
                                 <button className="btn-light mt-5 max-lg:center lg:w-full px-10" type="submit" onClick={handleImageUpload}> Upload </button>
 
@@ -198,14 +201,14 @@ const EditProfile =()=>{
 
                             <div className="w-full">
 
-                                <div className="grid grid-cols-1 md:grid-cols2 md:gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 md:gap-5">
 
                                         <div>
-                                            <InputBox name="fullname" type="text" value={fullname} placeholder="Full Name" disable={true} icon="fi-rr-user"/>
+                                            <InputBox name="fullname" type="text" value={fullname} placeholder="Full Name" disabled={true} icon="fi-rr-user"/>
                                         </div>
 
                                         <div>
-                                            <InputBox name="email" type="email" value={email} placeholder="Email" disable={true} icon="fi-rr-envelope"/>
+                                            <InputBox name="email" type="email" value={email} placeholder="Email" disabled={true} icon="fi-rr-envelope"/>
                                         </div>
 
                                 </div>
@@ -220,7 +223,7 @@ const EditProfile =()=>{
 
                                 <p className="mt-1 text-dark-grey">{charactersLeft} characters left</p>
 
-                                <p my-6 text-dark-grey>Add your social handles below</p>
+                                <p className="my-6 text-dark-grey">Add your social handles below</p>
 
                                 <div className="md:grid md:grid-cols-2 gap-x-6">
 
@@ -243,7 +246,7 @@ const EditProfile =()=>{
 
                      </div>
 
-                </form>
+                </form>)}
             </AnimationWrapper>
         )
 }

@@ -80,7 +80,7 @@ if(e.target.classList.contains('disable')){
         title,banner,des,content:blog.content,tags,draft:false
     }
 
-    axios.post(import.meta.env.VITE_SERVER_DOMAIN +  '/create-blog',{ ...blogObj,id:blog_id},{
+    axios.post(import.meta.env.VITE_SERVER_DOMAIN +  '/create-blogs',{ ...blogObj,id:blog_id},{
         headers:{
             'Authorization':`Bearer ${access_token}`
         }

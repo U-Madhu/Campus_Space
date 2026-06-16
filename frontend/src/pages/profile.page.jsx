@@ -18,7 +18,7 @@ export const profileDataStructure={
     personal_info:{
         fullname:"",
         username:"",
-        profil_img:"",
+        profile_img:"",
         bio:"",
 
     },
@@ -52,7 +52,7 @@ const ProfilePage=()=>{
         .then(({data:user})=>{
             console.log(user);
             if(user!=null){setProfile(user)}
-            setProfileLoaded(profile_id)
+            setProfileLoaded(profileId)
             getBlogs({user_id:user._id})
             setLoading(false)
         })
@@ -65,7 +65,8 @@ const ProfilePage=()=>{
 
 
     const getBlogs=({page=1,user_id})=>{
-            user_id=user_id ==undefined ? blogs.user_id :user_id;
+            // user_id=user_id ==undefined ? blogs.user_id :user_id;
+            user_id = user_id ?? blogs?.user_id;
             axios.post(import.meta.env.VITE_SERVER_DOMAIN +"/search-blogs",{
                 author:user_id,
                 page
@@ -109,7 +110,7 @@ const ProfilePage=()=>{
             {
                 loading?<Loader/>:
                 profile_username.length?
-                <section className="h-cover md:flex flex-row-reverse items-start gap-5 min-[1q00px]:gap-12">
+                <section className="h-cover md:flex flex-row-reverse items-start gap-5 min-[1000px]:gap-12">
 
                     <div className="flex flex-col max-md:items-center gap-5 min-w-[250px] md:w-[50%] md:pl-8 md:border-l border-grey md:sticky md:top-[100px] py-10">
                         <img src={profile_img} className="w-48 h-48 bg-grey rounded-full md:w-32 md:h-32"/>

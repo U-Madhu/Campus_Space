@@ -19,7 +19,7 @@ const ChangePassword=()=>{
 
         let form= new FormData(ChangePasswordForm.current);
 
-        let FormData ={};
+        let formData ={};
 
         for(let [key,value] of form.entries()){
             formData[key]=value;
@@ -39,7 +39,7 @@ const ChangePassword=()=>{
 
         let loadingToast =toast.loading("Updating...");
 
-        axios.post(import.meta.env.VITE_SERVER_DOMAAIN+"/change-password",formData,{headers:{
+        axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/change-password",formData,{headers:{
             'Authorization':`Bearer ${access_token}`
         }})
         .then(()=>{
@@ -73,7 +73,7 @@ const ChangePassword=()=>{
                     className="profile-edit-input" placeholder="New Password" 
                     icon="fi-rr-unlock"/>
 
-                    <button onClick={handleSubmit} className="btn-dark px-10" type="sumbit">Change Password</button>
+                    <button onClick={handleSubmit} className="btn-dark px-10" type="submit">Change Password</button>
 
                 </div>
             </form>

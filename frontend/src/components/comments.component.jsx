@@ -36,8 +36,26 @@ export const fetchComments=async({skip=0,blog_id,setParentCommentCountFun,commen
 
 const CommentContainer =()=>{
 
-    let {blog,setBlog,blog:{_id,title,comments:{results:commentsArr},activity:{total_parent_comments}},commentsWrapper,setCommentsWrapper,totalParentCommentLoaded,setTotalParentCommentLoaded}=useContext(BlogContext);
+   // let {blog,setBlog,blog:{_id,title,comments:{results:commentsArr},activity:{total_parent_comments}},commentsWrapper,setCommentsWrapper,totalParentCommentLoaded,setTotalParentCommentLoaded}=useContext(BlogContext);
    // console.log(commentsWrapper);
+   let {
+  blog,
+  setBlog,
+  commentsWrapper,
+  setCommentsWrapper,
+  totalParentCommentLoaded,
+  setTotalParentCommentLoaded
+} = useContext(BlogContext);
+
+let {
+  _id,
+  title,
+  comments = { results: [] },
+  activity = {}
+} = blog;
+
+let commentsArr = comments.results || [];
+let total_parent_comments = activity.total_parent_comments || 0;
 
    const loadMoreComments=async()=>{
 
@@ -60,22 +78,22 @@ const CommentContainer =()=>{
                 </button>
 
             </div>
-            <hr className="borde-grey my-8 w-[120%] -ml-10"/>
+            <hr className="border-grey my-8 w-[120%] -ml-10"/>
             <CommentField action="comment"/>
 
             {
                 commentsArr && commentsArr.length ?
                 commentsArr.map((comment,i)=>{
-                    return <AnimationWrapper key={i}>
+                    return( <AnimationWrapper key={i}>
                         <CommentCard index={i} leftVal={comment.childrenLevel*4} commentData={comment}/>
-                    </AnimationWrapper>
+                    </AnimationWrapper>)
                 }):<NoDataMessage message="No Comments"/>
             }
             {
                 total_parent_comments>totalParentCommentLoaded ?
                 <button 
                     onClick={loadMoreComments}
-                    className="text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2">
+                    className="mx-auto mt-4text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2">
                     Load More
                 </button>
                 :""

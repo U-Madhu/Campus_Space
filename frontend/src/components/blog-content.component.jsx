@@ -2,7 +2,7 @@ const Img =({url,caption})=>{
     return (
         <div>
             <img src={url}/>
-            { caption.length ?<p className="w-full text-center my-3 md:mb-12 text-base text-dark-grey">{caption}</p>:""}
+            { caption?.length ?<p className="w-full text-center my-3 md:mb-12 text-base text-dark-grey">{caption}</p>:""}
         </div>
     )
 }
@@ -14,14 +14,14 @@ const Quote=({quote,caption})=>{
                 {quote}
             </p>
             {
-                caption.length ?<p className="w-full text-purple text-base">{caption}</p>:""
+                caption?.length ?<p className="w-full text-purple text-base">{caption}</p>:""
 
             }
         </div>
     )
 
 }
-const list=({style,items})=>{
+const List=({style,items})=>{
 
     return (
         <ol className={`pl-5 ${style=="ordered"?"list-decimal":"list-disc"}`}>
@@ -58,6 +58,7 @@ const BlogContent=({block})=>{
     if(type=="list"){
         return <List style={data.style} items={data.items}/>
     }
+    return null;
    
 }
 

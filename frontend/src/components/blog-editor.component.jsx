@@ -17,13 +17,14 @@ const BlogEditor=()=>{
 
     const navigate = useNavigate();
     
-    let {blog,blog:{title,banner,content,tags,des},setBlog,textEditor,setTextEditor,setEditorState}=useContext(EditorContext)
+    let {blog,blog:{blog_id,title,banner,content,tags,des},setBlog,textEditor,setTextEditor,setEditorState}=useContext(EditorContext)
      
-    let {userAuth:{access_token}}=useContext(UserContext)
+    let {userAuth:{access_token}}=useContext(UserContext);
+
     useEffect(()=>{
         if(!textEditor.isReady){
             setTextEditor(new EditorJS({
-            holderId:"textEditor",
+            holder:"textEditor",
             data:Array.isArray(content)?content[0]:content,
             tools:tools,
             placeholder: "Let's Share your experience and take a step towards the Change"
@@ -115,7 +116,7 @@ const BlogEditor=()=>{
                                 let blogObj={
                                          title,banner,des,content,tags,draft:true 
                                  }
-                                axios.post(import.meta.env.VITE_SERVER_DOMAIN +  '/create-blog',{...blogObj,id:blog_id},{
+                                axios.post(import.meta.env.VITE_SERVER_DOMAIN +  '/create-blogs',{...blogObj,id:blog_id},{
                                 headers:{
                                     'Authorization':`Bearer ${access_token}`
                                 }

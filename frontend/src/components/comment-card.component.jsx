@@ -21,7 +21,8 @@ const CommentCard =({index,leftVal,commentData})=>{
         let startingPoint=index+1;
 
         try{
-            while(commentsArr[startingPoint].childrenLevel>=commentData.childrenLevel){
+            while(startingPoint >= 0 &&
+   commentsArr[startingPoint]&&commentsArr[startingPoint].childrenLevel>=commentData.childrenLevel){
                 startingPoint--;
             }
         }catch{
@@ -47,7 +48,7 @@ const CommentCard =({index,leftVal,commentData})=>{
                 if(parentIndex!=undefined){
                     commentsArr[parentIndex].children=commentsArr[parentIndex].children.filter(child=>child!=_id);
 
-                    if(commentsArr[parentIndex].children.length){
+                    if(!commentsArr[parentIndex].children.length){
                         commentsArr[parentIndex].isReplyLoaded=false;
                     }
 
@@ -57,7 +58,7 @@ const CommentCard =({index,leftVal,commentData})=>{
 
             }
             if(commentData.childrenLevel==0 && isDelete){
-                setTotalParentCommentsLoaded(preVal=>preVal-1)
+                setTotalParentCommentLoaded(preVal=>preVal-1)
             }
 
             setBlog({...blog,comments:{results:commentsArr},activity:{...activity,total_parent_comments:total_parent_comments-(commentData.childrenLevel==0 && isDelete ?1:0)}})
@@ -129,6 +130,15 @@ const CommentCard =({index,leftVal,commentData})=>{
     }
     const LoadMoreRepliesButton =()=>{
             let parentIndex =getParentIndex();
+            if (parentIndex === undefined || parentIndex === -1) {
+                     return null;
+                        }
+
+            let parent = commentsArr[parentIndex];
+
+            if (!parent) {
+                return null;
+            }
 
             let button=<button onClick={()=>loadReplies({skip:index-parentIndex,currentIndex:parentIndex})} className="text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2">Load More Replies</button>
               
@@ -140,7 +150,7 @@ const CommentCard =({index,leftVal,commentData})=>{
                             return button}
              }
             }else{
-                if(parentIndex){
+                if(parentIndex!== undefined){
                     if((index-parentIndex)<commentsArr[parentIndex].children.length)
                         { 
                             return button}
@@ -150,8 +160,8 @@ const CommentCard =({index,leftVal,commentData})=>{
     }
     return (
 
-        <div className="w-full h-12 mb-5 border" style={{paddingLeft:`${leftVal+10}px`}}>
-
+        <div className="w-full mb-5" style={{paddingLeft:`${leftVal+10}px`}}>
+{/* h-12  border are removed */}
             <div className="my-5 p-6 rounded-md border border-grey">
 
                 <div className="flex gap-3 items-center mb-8">
@@ -172,11 +182,11 @@ const CommentCard =({index,leftVal,commentData})=>{
                         </button>
                         :
                         <button className="text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2"
-                            onClick={loadReplies} 
+                            onClick={() => loadReplies({})}
                             >
                                 <i className="fi fi-rs-comment-dots"></i>
 
-                                {children.length}Reply
+                                {children.length} Reply
 
                         </button>
                     }
