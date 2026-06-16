@@ -51,7 +51,8 @@ export const tools={
         class:Image,
         config:{
             uploader:{
-                uploadByurl:uploadImageByUrl,
+                // FIXED: Corrected EditorJS Image uploader option name to uploadByUrl
+                uploadByUrl:uploadImageByUrl,
                 uploadByFile:uploadImageeByFile,
             }
         }

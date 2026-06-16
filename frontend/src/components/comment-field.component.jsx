@@ -60,7 +60,8 @@ let { total_comments, total_parent_comments } = activity;
             commentsArr.splice(index+1,0,data);
 
             setReplying(false);
-            newCommentArr=commentsArr;
+            // FIXED: Spread commentsArr to trigger UI update when reply is added
+            newCommentArr=[...commentsArr];
 
 
 

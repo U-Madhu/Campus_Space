@@ -218,7 +218,8 @@ server.post('/google-auth', async (req, res) => {
         picture = picture.replace("s96-c", "s384-c");
 
         let user = await User.findOne({ "personal_info.email": email })
-        .select("personal_info.fullname personal_info.username personal_info.profile_image google_auth")
+        // FIXED: Use correct schema field name profile_img instead of profile_image
+        .select("personal_info.fullname personal_info.username personal_info.profile_img google_auth")
         .then((u) => u || null)
         .catch(err => {
             return res.status(500).json({ "error": err.message });
@@ -239,7 +240,8 @@ server.post('/google-auth', async (req, res) => {
                 personal_info: {
                     fullname: name,
                     email,
-                    profile_image: picture,
+                    // FIXED: Use correct schema field name profile_img instead of profile_image
+                    profile_img: picture,
                     username
                 },
                 google_auth: true
@@ -280,16 +282,18 @@ server.post("/change-password",verifyJWT,(req,res)=>{
 
             }
 
-            bcrypt.compare(currentPassword,user.personal_info.password,(err,res)=>{
+            // FIXED: Renamed compare callback parameter from res to result to prevent shadowing Express res
+            bcrypt.compare(currentPassword,user.personal_info.password,(err,result)=>{
                 if(err){
                     return res.status(500).json({error:"Some error occured while changing the password ,please try again later"})
                 }
-                if(!res){
+                if(!result){
                     return res.status(403).json({error:"Incorrect current password"})
                 }
 
                 bcrypt.hash(newPassword,10,(err,hashed_password)=>{
-                    user.findOneAndUpdate({_id:req.user},{"personal_info.password":hashed_password})
+                    // FIXED: Used User model (uppercase U) instead of user document instance (lowercase u)
+                    User.findOneAndUpdate({_id:req.user},{"personal_info.password":hashed_password})
                     .then((u)=>{
                         return res.status(200).json({status:'password changed'})
                     })
@@ -312,7 +316,8 @@ server.post('/latest-blogs',(req,res)=>{
     let {page=1}=req.body;
     let maxLimit=3;
     Blog.find({draft:false})
-    .populate("author","personal_info.profile_image personal_info.username personal_info.fullname -_id")
+    // FIXED: Corrected populated field to profile_img instead of profile_image
+    .populate("author","personal_info.profile_img personal_info.username personal_info.fullname -_id")
     .sort({'publishedAt':-1})
     .select('blog_id title des banner activity tags publishedAt -_id')
     .skip((page-1)*maxLimit)
@@ -340,7 +345,8 @@ server.post('/all-latest-blogs-count',(req,res)=>{
 
 server.get("/trending-blogs",(req,res)=>{
     Blog.find({draft:false})
-    .populate("author","personal_info.profile_image personal_info.username personal_info.fullname -_id")
+    // FIXED: Corrected populated field to profile_img instead of profile_image
+    .populate("author","personal_info.profile_img personal_info.username personal_info.fullname -_id")
     .sort({'activity.total_read':-1,"activity.total_likes":-1,"publishedAt":-1})
     .select("blog_id title publishedAt -_id")
     .limit(5)
@@ -372,7 +378,8 @@ server.post("/search-blogs",(req,res)=>{
     let maxLimit=limit? limit:2;
 
     Blog.find(findQuery)
-    .populate("author","personal_info.profile_image personal_info.username personal_info.fullname -_id")
+    // FIXED: Corrected populated field to profile_img instead of profile_image
+    .populate("author","personal_info.profile_img personal_info.username personal_info.fullname -_id")
     .sort({'publishedAt':-1})
     .select('blog_id title des banner activity tags publishedAt -_id')
     .limit(maxLimit)
@@ -451,8 +458,26 @@ server.post('/update-profile-img',verifyJWT,(req,res)=>{
     let {url}=req.body;
 
     User.findOneAndUpdate({_id:req.user},{"personal_info.profile_img":url})
-    .then(()=>{
-        return res.status(200).json({profile_image:url})
+    .then((user)=>{
+        // FIXED: Delete the previous profile image from S3 bucket if it was an uploaded image
+        if(user && user.personal_info.profile_img){
+            const oldImg = user.personal_info.profile_img;
+            if(oldImg && oldImg.includes('campus-space-image-bucket') && oldImg !== url){
+                const key = oldImg.split('/').pop();
+                s3.deleteObject({
+                    Bucket: 'campus-space-image-bucket',
+                    Key: key
+                }, (err, data)=>{
+                    if(err){
+                        console.log("Failed to delete older image from S3:", err);
+                    }else{
+                        console.log("Successfully deleted older image from S3:", key);
+                    }
+                });
+            }
+        }
+        // FIXED: Return profile_img instead of profile_image to match User schema and frontend expectations
+        return res.status(200).json({profile_img:url})
     })
     .catch(err=>{
         return res.status(500).json({error:err.message})
@@ -542,10 +567,10 @@ server.post('/create-blogs',verifyJWT,(req,res)=>{
     let blogId=id || title.replace(/[^a-zA-Z0-9]/g,' ').replace(/\s+/g,'-').trim()+nanoid();
 
     if(id){
-
-        Blog.findOneAndUpdate({blog_id},{title,des,banner,content,tags,draft:draft?draft:false})
+        // FIXED: Changed undefined blog_id reference to blogId
+        Blog.findOneAndUpdate({blog_id: blogId},{title,des,banner,content,tags,draft:draft?draft:false})
         .then(blog=>{
-            return res.status(200).json({id:blog_id});
+            return res.status(200).json({id:blogId});
 
         })
         .catch(err=>{
@@ -579,9 +604,14 @@ server.post("/get-blog",(req,res)=>{
     let {blog_id,draft,mode}=req.body;
     let incrementVal =mode!='edit'?1:0;
     Blog.findOneAndUpdate({blog_id},{$inc:{"activity.total_reads":incrementVal}})
-    .populate("author","personal_info.fullname personal_info.profile_img")
+    // FIXED: Added personal_info.username to populated author fields
+    .populate("author","personal_info.fullname personal_info.profile_img personal_info.username")
     .select("title des content banner activity publishedAt blog_id tags")
     .then(blog=>{
+        // FIXED: Handled case where blog is not found (null)
+        if(!blog){
+            return res.status(404).json({error:"Blog not found"});
+        }
         User.findOneAndUpdate({"personal_info.username": blog.author.personal_info.username},{$inc :{"account_info.total_reads":incrementVal
         }})
         .catch(err=>{
@@ -767,57 +797,61 @@ server.post("/get-replies",(req,res)=>{
     })
 })
 
-const deleteComment=(_id)=>{
-
-    Comment.findOneAndDelete({_id})
-    .then(comment=>{
-        if(comment.parent){
-            Comment.findOneAndUpdate({_id:comment.parent},{$pull:{children:_id}})
-            .then(data=>console.log('comment delete from parent'))
-            .catch(err=>console.log(err))
-        }
-        Notification.findOneAndDelete({comment:_id})
-        .then(notification=>console.log('comment notification deleted'))
-
-        Notification.findOneAndDelete({replied_on_comment:_id})
-        .then(notification=>console.log('reply notification deleted'))
-
-        Blog.findOneAndUpdate({_id:comment.blog_id},{$pull:{comments:_id},$inc:{"activity.total_comments":-1,"activity.total_parent_comments":comment.parent?0:-1}})
-        .then(blog=>{
-            if(comment.children.length){
-                comment.children.map(replies=>{
-                    deleteComment(replies)
-
-                })
+const deleteComment=async(_id)=>{
+    let deletedCount = 0;
+    try{
+        const comment = await Comment.findOneAndDelete({_id});
+        // FIXED: Added check to ensure comment is not null before accessing properties (prevents crashes from recursive or duplicate delete requests)
+        if(comment){
+            deletedCount++;
+            if(comment.parent){
+                await Comment.findOneAndUpdate({_id:comment.parent},{$pull:{children:_id}});
+                console.log('comment delete from parent');
             }
-        })
+            await Notification.findOneAndDelete({comment:_id});
+            console.log('comment notification deleted');
 
+            await Notification.findOneAndDelete({replied_on_comment:_id});
+            console.log('reply notification deleted');
 
-
-    })
-    .catch(err=>{
+            await Blog.findOneAndUpdate({_id:comment.blog_id},{$pull:{comments:_id},$inc:{"activity.total_comments":-1,"activity.total_parent_comments":comment.parent?0:-1}});
+            
+            if(comment.children && comment.children.length){
+                for(let i = 0; i < comment.children.length; i++){
+                    // FIXED: Accumulate recursive deleted counts from nested replies
+                    deletedCount += await deleteComment(comment.children[i]);
+                }
+            }
+        }
+    }catch(err){
         console.log(err.message)
-    })
+    }
+    return deletedCount;
 }
 
-server.post("/delete-comment",verifyJWT,(req,res)=>{
+server.post("/delete-comment",verifyJWT,async(req,res)=>{
 
     let user_id=req.user;
 
     let{_id}=req.body;
 
-    Comment.findOne({_id})
-    .then(comment=>{
+    try{
+        const comment = await Comment.findOne({_id});
+        // FIXED: Added check to prevent TypeError when trying to delete an already-deleted comment
+        if(!comment){
+            return res.status(404).json({error:"Comment not found"});
+        }
         if(user_id==comment.commented_by || user_id==comment.blog_author){
-
-            deleteComment(_id);
-            return res.status(200).json({status:'done'});
+            // FIXED: Await deleteComment recursively and return the deletedCount to the frontend
+            const deletedCount = await deleteComment(_id);
+            return res.status(200).json({status:'done', deletedCount});
         }
         else{
             return res.status(403).json({error:"You can not delete this comment"})
         }
-    })
-
+    }catch(err){
+        return res.status(500).json({error:err.message});
+    }
 
 })
 

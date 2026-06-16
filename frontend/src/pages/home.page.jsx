@@ -66,7 +66,9 @@ const HomePage = () => {
                     state:blogs,
                     data:data.blogs,
                     page,
-                    countRoute:"/all-latest-blogs-count"
+                    // FIXED: Corrected countRoute and added tag to data_to_send for category query
+                    countRoute:"/search-blogs-count",
+                    data_to_send:{tag:pageState}
 
                 })
                 // console.log(data.blogs);

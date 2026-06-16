@@ -8,7 +8,8 @@ export const uploadImage =async(img)=>{
         await axios({
             method:'PUT',
             url:uploadURL,
-            headers:{'Content-Type':'multipart/form-data'},
+            // FIXED: Use correct Content-Type (image/jpeg or image/png) matching the presigned URL signature instead of multipart/form-data
+            headers:{'Content-Type': img.type},
             data:img
 
         })

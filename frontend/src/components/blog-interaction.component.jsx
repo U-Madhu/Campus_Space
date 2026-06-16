@@ -72,7 +72,8 @@ const BlogInteraction=()=>{
                 
                     <button
                         onClick={()=>setCommentsWrapper(preVal=>!preVal)}
-                    className={"w-10 h-10 rounded-full flex items-center justify-center "+(islikedByUser ?"bg-red/20 text-red":"bg-grey/80")}>
+                        // FIXED: Corrected comment button background classes to not check islikedByUser
+                        className="w-10 h-10 rounded-full flex items-center justify-center bg-grey/80">
                         <i className="fi fi-rr-comment-dots"/>
                     </button>
                     <p className="text-xl text-dark-grey">{total_comments}</p>

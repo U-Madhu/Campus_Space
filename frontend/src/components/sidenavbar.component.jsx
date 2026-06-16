@@ -71,19 +71,19 @@ const SideNav =()=>{
                 <div className={"min-w-[200px] h-[calc(100vh-80px-60px)] md:h-cover md:sticky top-24 overflow-y-auto p-6 md:pr-0 md:border-grey md:border-r absolute left-0 max-md:top-[64px] bg-white w-full md:w-auto max-md:w-[calc(100%+80px)]  max-md:px-16 max-md:-ml-7 duration-500 " +(!showSideNav ?"max-md:opacity-0 max-md:pointer-events-none":"opacity-100 pointer-events-auto")}>
                     <h1 className="text-xl text-dark-grey mb-3">DashBoard</h1>
                     <hr className="border-grey -ml-6 mb-8 mr-6"/>
-                    <NavLink to="/dashboard/blogs" onClick={(e)=>setPageState(e.target.innerText)} className="">
+                    <NavLink to="/dashboard/blogs" onClick={(e)=>setPageState(e.target.innerText)} className="sidebar-link">
                             <i className="fi fi-rr-document"></i>
                             Blogs
                     </NavLink>
 
 
-                    <NavLink to="/dashboard/notification" onClick={(e)=>setPageState(e.target.innerText)} className="">
+                    <NavLink to="/dashboard/notification" onClick={(e)=>setPageState(e.target.innerText)} className="sidebar-link">
                             <i className="fi fi-rr-bell"></i>
                             Notification
                     </NavLink>
 
 
-                    <NavLink to="/editor" onClick={(e)=>setPageState(e.target.innerText)} className="">
+                    <NavLink to="/editor" onClick={(e)=>setPageState(e.target.innerText)} className="sidebar-link">
                             <i className="fi fi-rr-file-edit"></i>
                             Write
                     </NavLink>
@@ -92,12 +92,12 @@ const SideNav =()=>{
                     <h1 className="text-xl text-dark-grey mt-20 mb-3">Settings</h1>
                     <hr className="border-grey -ml-6 mb-8 mr-6"/>
 
-                    <NavLink to="/settings/edit-profile" onClick={(e)=>setPageState(e.target.innerText)} className="">
+                    <NavLink to="/settings/edit-profile" onClick={(e)=>setPageState(e.target.innerText)} className="sidebar-link">
                             <i className="fi fi-rr-user"></i>
                             Edit Profile
                     </NavLink>
 
-                    <NavLink to="/settings/change-password" onClick={(e)=>setPageState(e.target.innerText)} className="">
+                    <NavLink to="/settings/change-password" onClick={(e)=>setPageState(e.target.innerText)} className="sidebar-link">
                             <i className="fi fi-rr-lock"></i>
                             Change Password
                     </NavLink>

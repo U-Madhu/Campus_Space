@@ -11,14 +11,15 @@ import BlogContent from "./blog-content.component";
 const CommentCard =({index,leftVal,commentData})=>{
     let {commented_by:{personal_info:{profile_img,fullname,username:commented_by_username}},commentedAt,comment,_id,children}=commentData;
 
-    let {blog,blog:{comments,activity,activity:{total_parent_comments},comments:{results:commentsArr},author:{personal_info:{username:blog_author}}},setBlog,setTotalParentCommentLoaded}=useContext(BlogContext)
+    let {blog,blog:{comments,activity,activity:{total_parent_comments, total_comments},comments:{results:commentsArr},author:{personal_info:{username:blog_author}}},setBlog,setTotalParentCommentLoaded}=useContext(BlogContext)
 
     let {userAuth:{access_token,username}}=useContext(UserContext);
 
     const [isReplying,setReplying]=useState(false);
 
     const getParentIndex =()=>{
-        let startingPoint=index+1;
+        // FIXED: Initialize startingPoint to index - 1 instead of index + 1, since the parent comment must exist before the current comment. Starting at index + 1 would cause it to terminate immediately and return an invalid parentIndex when no subsequent comments exist, leading to a TypeError crash.
+        let startingPoint=index-1;
 
         try{
             while(startingPoint >= 0 &&
@@ -31,13 +32,16 @@ const CommentCard =({index,leftVal,commentData})=>{
         return startingPoint;
     }
 
-    const removeCommentsCard=(startingPoint,isDelete=false)=>{
-            if(commentsArr[startingPoint]){
+    const removeCommentsCard=(startingPoint,isDelete=false, deletedCountVal = 0)=>{
+            // FIXED: Create a copy of commentsArr to avoid mutating state directly
+            let tempCommentsArr = [...commentsArr];
 
-                while(commentsArr[startingPoint].childrenLevel>commentData.childrenLevel){
+            if(tempCommentsArr[startingPoint]){
 
-                    commentsArr.splice(startingPoint,1);
-                    if(!commentsArr[startingPoint]){
+                while(tempCommentsArr[startingPoint].childrenLevel>commentData.childrenLevel){
+
+                    tempCommentsArr.splice(startingPoint,1);
+                    if(!tempCommentsArr[startingPoint]){
                         break;
                     }
 
@@ -45,23 +49,33 @@ const CommentCard =({index,leftVal,commentData})=>{
             }
             if(isDelete){
                 let parentIndex=getParentIndex();
-                if(parentIndex!=undefined){
-                    commentsArr[parentIndex].children=commentsArr[parentIndex].children.filter(child=>child!=_id);
+                // FIXED: Added check for parentIndex >= 0 to prevent TypeError (cannot read properties of undefined (reading 'children')) when parentIndex is -1 (meaning it is a top-level comment)
+                if(parentIndex !== undefined && parentIndex >= 0){
+                    tempCommentsArr[parentIndex].children=tempCommentsArr[parentIndex].children.filter(child=>child!=_id);
 
-                    if(!commentsArr[parentIndex].children.length){
-                        commentsArr[parentIndex].isReplyLoaded=false;
+                    if(!tempCommentsArr[parentIndex].children.length){
+                        tempCommentsArr[parentIndex].isReplyLoaded=false;
                     }
 
 
                 }
-                commentsArr.splice(index,1);
+                tempCommentsArr.splice(index,1);
 
             }
             if(commentData.childrenLevel==0 && isDelete){
                 setTotalParentCommentLoaded(preVal=>preVal-1)
             }
 
-            setBlog({...blog,comments:{results:commentsArr},activity:{...activity,total_parent_comments:total_parent_comments-(commentData.childrenLevel==0 && isDelete ?1:0)}})
+            // FIXED: Update total_comments and total_parent_comments in blog activity state when comment is deleted
+            setBlog({
+                ...blog,
+                comments:{...comments,results:tempCommentsArr},
+                activity:{
+                    ...activity,
+                    total_comments: total_comments - (isDelete ? deletedCountVal : 0),
+                    total_parent_comments: total_parent_comments - (commentData.childrenLevel == 0 && isDelete ? 1 : 0)
+                }
+            })
 
 
     }
@@ -70,19 +84,24 @@ const CommentCard =({index,leftVal,commentData})=>{
 
         if(commentsArr[currentIndex].children.length){
 
-            hideReplies();
+            // FIXED: Prevent calling hideReplies when loading more nested replies (skip > 0)
+            if(skip == 0){
+                hideReplies();
+            }
 
             axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/get-replies",{_id:commentsArr[currentIndex]._id,skip})
             .then(({data:{replies}})=>{
-                commentsArr[currentIndex].isReplyLoaded=true;
+                // FIXED: Create a copy of commentsArr to avoid mutating state directly
+                let tempCommentsArr = [...commentsArr];
+                tempCommentsArr[currentIndex].isReplyLoaded=true;
 
                 for(let i=0;i<replies.length;i++){
 
-                    replies[i].childrenLevel=commentsArr[currentIndex].childrenLevel+1;
+                    replies[i].childrenLevel=tempCommentsArr[currentIndex].childrenLevel+1;
 
-                    commentsArr.splice(currentIndex+1+i+skip,0,replies[i])
+                    tempCommentsArr.splice(currentIndex+1+i+skip,0,replies[i])
                 }
-                setBlog({...blog,comments:{...comments,results:commentsArr}})
+                setBlog({...blog,comments:{...comments,results:tempCommentsArr}})
                 
             })
             .catch(err=>{
@@ -95,17 +114,17 @@ const CommentCard =({index,leftVal,commentData})=>{
     }
     
     const deleteComment=(e)=>{
-
-        e.target.setAttribute("disabled",true);
+        // FIXED: Use e.currentTarget instead of e.target to refer to the button container rather than the inner <i> tag
+        e.currentTarget.setAttribute("disabled",true);
 
         axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/delete-comment",{_id},{
             headers:{
                 'Authorization':`Bearer ${access_token}`
             }
         })
-        .then(()=>{
-            e.target.removeAttribute("disabled");
-            removeCommentsCard(index+1,true)
+        .then(({ data })=>{
+            // FIXED: Pass backend's returned deletedCount to removeCommentsCard to update the total comment count
+            removeCommentsCard(index+1, true, data.deletedCount)
         })
         .catch(err=>{
             console.log(err);

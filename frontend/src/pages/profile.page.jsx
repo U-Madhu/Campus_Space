@@ -24,7 +24,8 @@ export const profileDataStructure={
     },
     account_info:{
         total_posts:0,
-        total_blogs:0
+        // FIXED: Added total_reads to profileDataStructure to prevent toLocaleString crash on mount
+        total_reads:0
     },
     social_links:{},
     joinedAt:""

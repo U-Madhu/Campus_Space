@@ -115,7 +115,8 @@ const EditProfile =()=>{
 
             let form=new FormData(editProfileForm.current);
 
-            let formdata={};
+            // FIXED: Renamed formdata to formData to match usages
+            let formData={};
 
             for(let [key,value] of form.entries()){
 

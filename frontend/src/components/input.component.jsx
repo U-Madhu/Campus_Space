@@ -1,5 +1,6 @@
 import { useState } from "react";
-const InputBox=({name,type,id,value,placeholder,icon,disable=false})=>{
+// FIXED: Renamed disable to disabled to match standard HTML/JSX input disabled property
+const InputBox=({name,type,id,value,placeholder,icon,disabled=false})=>{
     const [passwordVisible,setPasswordVisible]=useState(false);
 
     return (
@@ -8,7 +9,7 @@ const InputBox=({name,type,id,value,placeholder,icon,disable=false})=>{
                     name={name}
                     type={type=="password"? passwordVisible?"text":"password":type}
                     id={id}
-                    disabled={disable}
+                    disabled={disabled}
                     defaultValue={value}
                     placeholder={placeholder}
                     className="input-box"

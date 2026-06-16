@@ -5,6 +5,8 @@ import { useState } from "react";
 import BlogEditor from "../components/blog-editor.component.jsx";
 import PublishForm from "../components/publish-form.component.jsx";
 import Loader from "../components/loader.component.jsx";
+// FIXED: Imported axios
+import axios from "axios";
 
 const blogStructure={
     title:'',

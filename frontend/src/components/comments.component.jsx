@@ -84,7 +84,8 @@ let total_parent_comments = activity.total_parent_comments || 0;
             {
                 commentsArr && commentsArr.length ?
                 commentsArr.map((comment,i)=>{
-                    return( <AnimationWrapper key={i}>
+                    // FIXED: Changed key from array index (i) to unique database ID (comment._id) so React can track deletions/updates properly without stale state
+                    return( <AnimationWrapper key={comment._id}>
                         <CommentCard index={i} leftVal={comment.childrenLevel*4} commentData={comment}/>
                     </AnimationWrapper>)
                 }):<NoDataMessage message="No Comments"/>
@@ -93,7 +94,8 @@ let total_parent_comments = activity.total_parent_comments || 0;
                 total_parent_comments>totalParentCommentLoaded ?
                 <button 
                     onClick={loadMoreComments}
-                    className="mx-auto mt-4text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2">
+                    // FIXED: Added missing space in className
+                    className="mx-auto mt-4 text-dark-grey p-2 px-3 hover:bg-grey/30 rounded-md flex items-center gap-2">
                     Load More
                 </button>
                 :""
