@@ -5,7 +5,10 @@ Campus Space is a modern, feature-rich, and fully responsive full-stack blogging
 [![Tech Stack](https://img.shields.io/badge/Stack-MERN-blue.svg)](https://mongodb.com)
 [![Vite](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-brightgreen.svg)](https://vitejs.dev)
 [![Node](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-green.svg)](https://nodejs.org)
-[![AWS S3](https://img.shields.io/badge/Storage-AWS%20S3-orange.svg)](https://aws.amazon.com/s3)
+[![MongoDB Atlas](https://img.shields.io/badge/Database-MongoDB%20Atlas-green.svg?logo=mongodb)](https://www.mongodb.com/cloud/atlas)
+[![Firebase](https://img.shields.io/badge/Auth-Firebase-orange.svg?logo=firebase)](https://firebase.google.com/)
+[![AWS S3](https://img.shields.io/badge/Storage-AWS%20S3-orange.svg?logo=amazon-s3)](https://aws.amazon.com/s3)
+[![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind%20CSS-blue.svg?logo=tailwindcss)](https://tailwindcss.com)
 
 ---
 
