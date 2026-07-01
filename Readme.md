@@ -12,15 +12,6 @@ Campus Space is a modern, feature-rich, and fully responsive full-stack blogging
 
 ---
 
-## 📌 Table of Contents
-- [🚀 Key Features](#key-features)
-- [🛠️ Tech Stack & Dependencies](#tech-stack--dependencies)
-- [📁 Folder Structure](#folder-structure)
-- [⚙️ Installation & Configuration](#installation--configuration)
-- [🏃 Running the Application](#running-the-application)
-- [🔌 API Reference](#api-reference)
-- [🛠️ Main Bug Fixes Completed](#main-bug-fixes-completed)
-- [📄 License](#license)
 
 ---
 
