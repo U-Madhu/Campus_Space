@@ -161,13 +161,7 @@ npm run dev
 
 ---
 
-## 🛠️ Main Bug Fixes Completed
-- **AWS S3 Image Cleanup**: The backend now automatically deletes a user's previous custom profile picture from the AWS S3 bucket upon a new upload, keeping the storage optimized.
-- **Nested Comments Deletion**: Recursive comment deletion now correctly aggregates the total comments deleted (including sub-replies) and decrements the blog activity count accordingly.
-- **Side Nav Layout Fixed**: Added the missing `sidebar-link` classes to React Router `NavLinks` to correct the dashboard formatting.
-- **Password Shadowing & Model Crashes**: Cleaned up Express response parameter shadowing and Mongoose syntax errors causing crashes on credentials changes.
 
----
 
 ## 📄 License
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
