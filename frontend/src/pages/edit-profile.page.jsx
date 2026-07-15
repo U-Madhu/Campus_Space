@@ -88,6 +88,18 @@ const EditProfile =()=>{
                             storeInSession("user",JSON.stringify(newUserAuth));
                             setUserAuth(newUserAuth);
 
+                            setProfile(prevProfile => ({
+                                ...prevProfile,
+                                personal_info: {
+                                    ...prevProfile.personal_info,
+                                    profile_img: data.profile_img
+                                }
+                            }));
+
+                            if (profileImgEle.current) {
+                                profileImgEle.current.src = data.profile_img;
+                            }
+
                             setUpdatedProfileImg(null);
                             toast.dismiss(loadingToast);
                             e.target.removeAttribute("disabled");
