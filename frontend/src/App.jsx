@@ -14,6 +14,9 @@ import SideNav from "./components/sidenavbar.component";
 import EditProfile from "./pages/edit-profile.page";
 import Notifications from "./pages/notifications.page";
 import ManagesBlogs from "./pages/manage-blogs.page";
+import AdminBlogs from "./pages/admin-blogs.page";
+import AdminUsers from "./pages/admin-users.page";
+import WelcomeModal from "./components/welcome-modal.component";
 
 export const UserContext = createContext({});
 
@@ -58,6 +61,7 @@ const App = () => {
 
   return (
     <UserContext.Provider value={{ userAuth, setuserAuth }}>
+      <WelcomeModal />
       <Routes>
         <Route path="/editor" element={<Editor />} />
         <Route path="/editor/:blog_id" element={<Editor />} />
@@ -66,6 +70,8 @@ const App = () => {
           <Route path="dashboard" element={<SideNav />}>
             <Route path="blogs" element={<ManagesBlogs />} />
             <Route path="notifications" element={<Notifications />} />
+            <Route path="admin-blogs" element={<AdminBlogs />} />
+            <Route path="admin-users" element={<AdminUsers />} />
           </Route>
           <Route path="settings" element={<SideNav />}>
             <Route path="edit-profile" element={<EditProfile />} />

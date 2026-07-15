@@ -9,6 +9,7 @@ import {activeTabRef,activeTabLineRef} from '../components/inpage-navigation.com
 import NoDataMessage from "../components/nodata.component";
 import { filterPaginationData } from "../common/filter-pagination-data";
 import LoadMoreDataBtn from "../components/load-more.component";
+import AdBanner from "../components/ad-banner.component";
 
 const HomePage = () => {
 
@@ -126,15 +127,15 @@ const HomePage = () => {
 
                                         (
 
-                                            blogs.results.length?
-                                            blogs.results.map((blog,i)=>{
-
-                                                                    return  (   <AnimationWrapper transition={{duration:1,delay:i*.2}} key={i}>
-                                                                                             <BlogPostCard content={blog} author={blog.author.personal_info}/>
-                                                                                 </AnimationWrapper>
-                                                                             );
-                                                                })
-                                            :
+                                            blogs.results.length ? (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+                                                    {blogs.results.map((blog, i) => (
+                                                        <AnimationWrapper transition={{ duration: 1, delay: i * .2 }} key={i}>
+                                                            <BlogPostCard content={blog} author={blog.author.personal_info} />
+                                                        </AnimationWrapper>
+                                                    ))}
+                                                </div>
+                                            ) :
                                             <NoDataMessage message="No blogs published"  />
 
                                     )}
@@ -200,6 +201,8 @@ const HomePage = () => {
                                                         )
                                             }
                                         </div>
+
+                                        <AdBanner slotId="1234567890" />
 
                                 </div>
 

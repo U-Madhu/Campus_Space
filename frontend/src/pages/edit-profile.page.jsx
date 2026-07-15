@@ -6,7 +6,7 @@ import AnimationWrapper from "../common/page-animation";
 import Loader from "../components/loader.component";
 import toast, { Toaster } from "react-hot-toast";
 import InputBox from "../components/input.component";
-import { uploadImage } from "../common/aws";
+import { uploadImage } from "../common/cloudinary";
 import { storeInSession } from "../common/session";
 
 const EditProfile =()=>{

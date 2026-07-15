@@ -80,6 +80,11 @@ const userSchema = mongoose.Schema({
         type: [ Schema.Types.ObjectId ],
         ref: 'blogs',
         default: [],
+    },
+    role: {
+        type: String,
+        default: "user",
+        enum: ["user", "admin"]
     }
 
 }, 

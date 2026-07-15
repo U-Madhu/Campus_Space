@@ -2,7 +2,7 @@ import {Link,useNavigate} from "react-router-dom"
 import logo from "../imgs/logo.png"
 import AnimationWrapper from "../common/page-animation";
 import defaultBanner from "../imgs/blog banner.png";
-import { uploadImage } from "../common/aws";
+import { uploadImage } from "../common/cloudinary";
 import { useEffect, useRef } from "react";
 import { Toaster,toast } from "react-hot-toast";
 import { EditorContext } from "../pages/editor.pages";
@@ -23,12 +23,52 @@ const BlogEditor=()=>{
 
     useEffect(()=>{
         if(!textEditor.isReady){
-            setTextEditor(new EditorJS({
-            holder:"textEditor",
-            data:Array.isArray(content)?content[0]:content,
-            tools:tools,
-            placeholder: "Let's Share your experience and take a step towards the Change"
-        }))
+            const editorInstance = new EditorJS({
+                holder:"textEditor",
+                data:Array.isArray(content)?content[0]:content,
+                tools:tools,
+                placeholder: "Let's Share your experience and take a step towards the Change",
+                onReady: () => {
+                    const el = document.getElementById("textEditor");
+                    if (el) {
+                        el.addEventListener("keydown", (e) => {
+                            if (e.key === 'Enter') {
+                                const selection = window.getSelection();
+                                if (!selection.rangeCount) return;
+
+                                let isParagraph = false;
+                                let node = selection.anchorNode;
+                                while (node && node !== el) {
+                                    if (node.classList && node.classList.contains('ce-paragraph')) {
+                                        isParagraph = true;
+                                        break;
+                                    }
+                                    node = node.parentNode;
+                                }
+
+                                if (isParagraph) {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    
+                                    if (!e.shiftKey) {
+                                        // Enter -> soft line break inside same paragraph block
+                                        document.execCommand("insertLineBreak");
+                                    } else {
+                                        // Shift + Enter -> create new block below
+                                        try {
+                                            const index = editorInstance.blocks.getCurrentBlockIndex();
+                                            editorInstance.blocks.insert('paragraph', { text: '' }, {}, index + 1, true);
+                                        } catch (err) {
+                                            console.error("Failed to insert block:", err.message);
+                                        }
+                                    }
+                                }
+                            }
+                        }, true);
+                    }
+                }
+            });
+            setTextEditor(editorInstance);
         }
         
     },[])

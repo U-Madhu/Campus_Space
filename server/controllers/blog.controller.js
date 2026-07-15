@@ -3,20 +3,80 @@ import Blog from "../models/Blog.js";
 import User from "../models/User.js";
 import Notification from "../models/Notification.js";
 import Comment from "../models/Comment.js";
-import { generateUploadURL as getS3UploadURL } from "../config/aws.config.js";
+import { Readable } from 'stream';
+import cloudinary from '../config/cloudinary.config.js';
+import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
 
-export const getUploadUrl = (req, res) => {
-    getS3UploadURL().then(url => res.status(200).json({ uploadURL: url }))
-    .catch(err => {
-        console.log(err.message);
+const sendApprovalEmail = async (blog, author) => {
+    try {
+        if (!process.env.ADMIN_EMAIL) {
+            console.log("ADMIN_EMAIL not set, skipping approval email.");
+            return;
+        }
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASSWORD
+            }
+        });
+
+        const approvalLink = `${process.env.VITE_SERVER_DOMAIN || 'http://localhost:3000'}/admin/approve-blog-link/${blog.blog_id}`;
+
+        const mailOptions = {
+            from: process.env.SMTP_USER,
+            to: process.env.ADMIN_EMAIL,
+            subject: `Pending Approval: ${blog.title}`,
+            html: `
+                <div style="font-family:sans-serif;padding:20px;line-height:1.6;">
+                    <h2>New Blog Publication Request</h2>
+                    <p><strong>Title:</strong> ${blog.title}</p>
+                    <p><strong>Author:</strong> ${author.personal_info.fullname} (@${author.personal_info.username})</p>
+                    <p><strong>Description:</strong> ${blog.des}</p>
+                    <p>Please click the button below to approve this blog post and publish it to the campus space:</p>
+                    <div style="margin: 20px 0;">
+                        <a href="${approvalLink}" style="background-color:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;font-weight:bold;display:inline-block;">Approve Blog</a>
+                    </div>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`Approval email sent successfully to ${process.env.ADMIN_EMAIL}`);
+    } catch (err) {
+        console.error("Failed to send approval email:", err.message);
+    }
+};
+
+export const uploadImage = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
+        
+        const stream = cloudinary.uploader.upload_stream(
+            { folder: "campus-space" },
+            (error, result) => {
+                if (error) {
+                    console.error("Cloudinary upload error:", error.message);
+                    return res.status(500).json({ error: error.message });
+                }
+                return res.status(200).json({ url: result.secure_url });
+            }
+        );
+        
+        Readable.from(req.file.buffer).pipe(stream);
+    } catch (err) {
         return res.status(500).json({ error: err.message });
-    });
+    }
 };
 
 export const latestBlogs = (req, res) => {
     let { page = 1 } = req.body;
     let maxLimit = 3;
-    Blog.find({ draft: false })
+    Blog.find({ draft: false, approved: true })
     .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
     .sort({ 'publishedAt': -1 })
     .select('blog_id title des banner activity tags publishedAt -_id')
@@ -31,7 +91,7 @@ export const latestBlogs = (req, res) => {
 };
 
 export const allLatestBlogsCount = (req, res) => {
-    Blog.countDocuments({ draft: false })
+    Blog.countDocuments({ draft: false, approved: true })
     .then(count => {
         return res.status(200).json({ totalDocs: count });
     })
@@ -42,9 +102,9 @@ export const allLatestBlogsCount = (req, res) => {
 };
 
 export const trendingBlogs = (req, res) => {
-    Blog.find({ draft: false })
+    Blog.find({ draft: false, approved: true })
     .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
-    .sort({ 'activity.total_read': -1, "activity.total_likes": -1, "publishedAt": -1 })
+    .sort({ "activity.total_reads": -1, "publishedAt": -1 })
     .select("blog_id title publishedAt -_id")
     .limit(5)
     .then(blogs => {
@@ -59,11 +119,11 @@ export const searchBlogs = (req, res) => {
     let { tag, query, page, author, limit, eliminate_blog } = req.body;
     let findQuery;
     if (tag) {
-        findQuery = { tags: tag, draft: false, blog_id: { $ne: eliminate_blog } };
+        findQuery = { tags: tag, draft: false, approved: true, blog_id: { $ne: eliminate_blog } };
     } else if (query) {
-        findQuery = { draft: false, title: new RegExp(query, 'i') };
+        findQuery = { draft: false, approved: true, title: new RegExp(query, 'i') };
     } else if (author) {
-        findQuery = { author, draft: false };
+        findQuery = { author, draft: false, approved: true };
     }
 
     let maxLimit = limit ? limit : 2;
@@ -86,11 +146,11 @@ export const searchBlogsCount = (req, res) => {
     let { tag, query, author } = req.body;
     let findQuery;
     if (tag) {
-        findQuery = { tags: tag, draft: false };
+        findQuery = { tags: tag, draft: false, approved: true };
     } else if (query) {
-        findQuery = { draft: false, title: new RegExp(query, 'i') };
+        findQuery = { draft: false, approved: true, title: new RegExp(query, 'i') };
     } else if (author) {
-        findQuery = { author, draft: false };
+        findQuery = { author, draft: false, approved: true };
     }
 
     Blog.countDocuments(findQuery)
@@ -106,6 +166,7 @@ export const searchBlogsCount = (req, res) => {
 export const createBlog = (req, res) => {
     let authorId = req.user;
     let { id, title, des, banner, tags, content, draft } = req.body;
+    let approved = req.role === 'admin' ? true : false;
     
     if (!title.length) {
         return res.status(403).json({ error: "You must provid a title" });
@@ -129,22 +190,37 @@ export const createBlog = (req, res) => {
     let blogId = id || title.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, '-').trim() + nanoid();
 
     if (id) {
-        Blog.findOneAndUpdate({ blog_id: blogId }, { title, des, banner, content, tags, draft: draft ? draft : false })
+        let updateObj = { title, des, banner, content, tags, draft: draft ? draft : false };
+        if (!draft) {
+            updateObj.approved = approved;
+        }
+
+        Blog.findOneAndUpdate({ blog_id: blogId }, updateObj)
         .then(blog => {
+            if (!draft && req.role !== 'admin') {
+                User.findById(authorId).then(user => {
+                    if (user) {
+                        sendApprovalEmail({ blog_id: blogId, title, des }, user);
+                    }
+                });
+            }
             return res.status(200).json({ id: blogId });
         })
         .catch(err => {
-            return res.status(500).json({ error: "Failed to update total posts number" });
+            return res.status(500).json({ error: "Failed to update blog details" });
         });
     } else {
         let blog = new Blog({
-            title, des, banner, content, tags, author: authorId, blog_id: blogId, draft: Boolean(draft)
+            title, des, banner, content, tags, author: authorId, blog_id: blogId, draft: Boolean(draft), approved: draft ? false : approved
         });
 
-        blog.save().then(blog => {
+        blog.save().then(savedBlog => {
             let incrementVal = draft ? 0 : 1;
-            User.findOneAndUpdate({ _id: authorId }, { $inc: { "account_info.total_posts": incrementVal }, $push: { "blogs": blog._id } })
+            User.findOneAndUpdate({ _id: authorId }, { $inc: { "account_info.total_posts": incrementVal }, $push: { "blogs": savedBlog._id } })
             .then(user => {
+                if (!draft && req.role !== 'admin') {
+                    sendApprovalEmail(savedBlog, user);
+                }
                 return res.status(200).json({ id: blogId });
             })
             .catch(err => {
@@ -162,7 +238,7 @@ export const getBlog = (req, res) => {
     
     Blog.findOneAndUpdate({ blog_id }, { $inc: { "activity.total_reads": incrementVal } })
     .populate("author", "personal_info.fullname personal_info.profile_img personal_info.username")
-    .select("title des content banner activity publishedAt blog_id tags")
+    .select("title des content banner activity publishedAt blog_id tags approved")
     .then(blog => {
         if (!blog) {
             return res.status(404).json({ error: "Blog not found" });
@@ -177,6 +253,28 @@ export const getBlog = (req, res) => {
         if (blog.draft && !draft) {
             return res.status(500).json({ error: 'you can not access draft blogs' });
         }
+
+        // Enforce approval flow security
+        if (!blog.draft && !blog.approved) {
+            let userId = null;
+            let userRole = null;
+            const authHeader = req.headers['authorization'];
+            const token = authHeader && authHeader.split(" ")[1];
+            if (token) {
+                try {
+                    const decoded = jwt.verify(token, process.env.SECRET_ACCESS_KEY);
+                    userId = decoded.id;
+                    userRole = decoded.role;
+                } catch (err) {
+                    // ignore
+                }
+            }
+
+            if (userRole !== 'admin' && blog.author._id.toString() !== userId) {
+                return res.status(403).json({ error: "This blog is pending admin approval." });
+            }
+        }
+
         return res.status(200).json({ blog });
     })
     .catch(err => {
@@ -239,7 +337,7 @@ export const userWrittenBlogs = (req, res) => {
     .skip(skipDocs)
     .limit(maxLimit)
     .sort({ publishedAt: -1 })
-    .select("title banner publishedAt blog_id activity des draft -_id")
+    .select("title banner publishedAt blog_id activity des draft approved -_id")
     .then(blogs => {
         return res.status(200).json({ blogs });
     })

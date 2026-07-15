@@ -1,6 +1,24 @@
 import bcrypt from "bcrypt";
 import User from "../models/User.js";
-import { s3 } from "../config/aws.config.js";
+// import { s3 } from "../config/aws.config.js";
+import cloudinary from "../config/cloudinary.config.js";
+
+const getCloudinaryPublicId = (url) => {
+    try {
+        const parts = url.split('/upload/');
+        if (parts.length < 2) return null;
+        const pathParts = parts[1].split('/');
+        if (pathParts[0].startsWith('v')) {
+            pathParts.shift();
+        }
+        const fullPath = pathParts.join('/');
+        const lastDot = fullPath.lastIndexOf('.');
+        return lastDot === -1 ? fullPath : fullPath.substring(0, lastDot);
+    } catch (err) {
+        console.error("Failed to parse public ID:", err.message);
+        return null;
+    }
+};
 
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
 
@@ -78,6 +96,8 @@ export const updateProfileImg = (req, res) => {
     .then((user) => {
         if (user && user.personal_info.profile_img) {
             const oldImg = user.personal_info.profile_img;
+            
+            /* S3 cleanup commented out
             if (oldImg && oldImg.includes('campus-space-image-bucket') && oldImg !== url) {
                 const key = oldImg.split('/').pop();
                 s3.deleteObject({
@@ -90,6 +110,21 @@ export const updateProfileImg = (req, res) => {
                         console.log("Successfully deleted older image from S3:", key);
                     }
                 });
+            }
+            */
+
+            // Cloudinary cleanup
+            if (oldImg && oldImg.includes('res.cloudinary.com') && oldImg !== url) {
+                const publicId = getCloudinaryPublicId(oldImg);
+                if (publicId) {
+                    cloudinary.uploader.destroy(publicId, (err, result) => {
+                        if (err) {
+                            console.log("Failed to delete older image from Cloudinary:", err);
+                        } else {
+                            console.log("Successfully deleted older image from Cloudinary:", publicId);
+                        }
+                    });
+                }
             }
         }
         return res.status(200).json({ profile_img: url });

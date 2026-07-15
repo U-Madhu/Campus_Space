@@ -1,3 +1,4 @@
+/*
 import axios from "axios";
 
 export const uploadImage =async(img)=>{
@@ -19,3 +20,4 @@ export const uploadImage =async(img)=>{
     })
     return imgUrl;
 }
+*/

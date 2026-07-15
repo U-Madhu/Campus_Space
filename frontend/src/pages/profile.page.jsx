@@ -155,16 +155,16 @@ const ProfilePage=()=>{
 
                                                     (
 
-                                                        blogs.results.length?
-                                                        blogs.results.map((blog,i)=>{
-
-                                                                                return  (   <AnimationWrapper transition={{duration:1,delay:i*.2}} key={i}>
-                                                                                                        <BlogPostCard content={blog} author={blog.author.personal_info}/>
-                                                                                            </AnimationWrapper>
-                                                                                        );
-                                                                            })
-                                                        :
-                                                        <NoDataMessage message="No blogs published"  />
+                                                          blogs.results.length ? (
+                                                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+                                                                  {blogs.results.map((blog, i) => (
+                                                                      <AnimationWrapper transition={{ duration: 1, delay: i * .2 }} key={i}>
+                                                                          <BlogPostCard content={blog} author={blog.author.personal_info} />
+                                                                      </AnimationWrapper>
+                                                                  ))}
+                                                              </div>
+                                                          ) :
+                                                         <NoDataMessage message="No blogs published"  />
 
                                                 )}
                                                 <LoadMoreDataBtn state={blogs} fetchDataFun={getBlogs}/>

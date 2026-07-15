@@ -1,3 +1,4 @@
+/*
 import aws from "aws-sdk";
 import { nanoid } from "nanoid";
 
@@ -18,3 +19,4 @@ export const generateUploadURL = async () => {
         ContentType: "image/jpeg"
     });
 };
+*/

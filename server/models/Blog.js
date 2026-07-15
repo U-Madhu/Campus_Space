@@ -58,6 +58,10 @@ const blogSchema = mongoose.Schema({
     draft: {
         type: Boolean,
         default: false
+    },
+    approved: {
+        type: Boolean,
+        default: false
     }
 
 }, 

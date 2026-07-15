@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import logo from "../imgs/logo.png";
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { UserContext } from '../App';
 import UserNavigationPanel from './user-navigation.component';
 import axios from 'axios';
@@ -9,6 +9,21 @@ const Navbar = () => {
     const [SearchBoxVisibility, SetsearchBoxVisibility] = useState(false);
     const { userAuth, userAuth: { access_token, profile_img, new_notification_available }, setUserAuth } = useContext(UserContext);
     const [userNavPanel, setUserNavPanel] = useState(false);
+    const userNavRef = useRef(null);
+
+    // Click outside to close user nav panel
+    useEffect(() => {
+        if (!userNavPanel) return;
+        const handleClickOutside = (event) => {
+            if (userNavRef.current && !userNavRef.current.contains(event.target)) {
+                setUserNavPanel(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [userNavPanel]);
 
     let navigate = useNavigate();
 
@@ -41,12 +56,6 @@ const Navbar = () => {
             navigate(`/search/${query}`);
         }
     }
-
-    const handleBlur = () => {
-        setTimeout(() => {
-            setUserNavPanel(false);
-        }, 200);
-    };
 
 
     return (
@@ -104,15 +113,15 @@ const Navbar = () => {
                                 </button>
                             </Link>
 
-                            <div className="relative" onClick={handleUserNavPanel} onBlur={handleBlur}>
-                                <button className="w-12 h-12 mt-1">
+                            <div className="relative" ref={userNavRef}>
+                                <button className="w-12 h-12 mt-1" onClick={handleUserNavPanel}>
                                     <img
                                         src={profile_img}
                                         className="w-full h-full object-cover rounded-full"
                                     />
                                 </button>
 
-                                {userNavPanel && <UserNavigationPanel />}
+                                {userNavPanel && <UserNavigationPanel closePanel={() => setUserNavPanel(false)} />}
                             </div>
                         </>
                     ) : (

@@ -14,7 +14,7 @@ const UserAuthForm= ({type})=>{
 
     const authForm=useRef(null);
     
-    const { userAuth, setUserAuth } = useContext(UserContext);
+    const { userAuth, setuserAuth } = useContext(UserContext);
     const { access_token } = userAuth || {};
 
     const navigate = useNavigate(); // ✅ added
@@ -24,13 +24,19 @@ const UserAuthForm= ({type})=>{
         axios.post(import.meta.env.VITE_SERVER_DOMAIN+serverRoute,formData).then(({data})=>{
            
            storeInSession("user",JSON.stringify(data));
-           setUserAuth(data);
+           setuserAuth(data);
 
            navigate('/'); // ✅ added (force redirect)
 
-        }).catch(({response})=>{
-            toast.error(response.data.error);
-        })
+        }).catch((err) => {
+    console.log(err);
+
+    if (err.response) {
+        toast.error(err.response.data.error || "Something went wrong");
+    } else {
+        toast.error(err.message || "Unable to connect to server");
+    }
+});
 
     }
 

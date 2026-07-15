@@ -8,6 +8,7 @@ import BlogPostCard from "../components/blog-post.component"
 import BlogContent from "../components/blog-content.component" 
 import CommentContainer, { fetchComments } from "../components/comments.component"
 import axios from "axios"
+import AdBanner from "../components/ad-banner.component"
 
 export const blogStructure={
     title:'',
@@ -45,7 +46,7 @@ const BlogPage =()=>{
 
             console.log(blog);
 
-            axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/search-blogs",{tag:tags[0],limit:6,eliminate_blog:blog_id})
+            axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/search-blogs",{tag:blog.tags[0],limit:6,eliminate_blog:blog_id})
             .then(({data})=>{
 
                 setSimilarBlogs(data.blogs);
@@ -111,33 +112,47 @@ const BlogPage =()=>{
 
                                                 <div className="my-12 fnt-gelasio blog-page-content">
 
-                                                    {
-                                                        content?.blocks?.map((block,i)=>(
-                                                                <div key={i} className="my-4 md:my-8">
-                                                                    <BlogContent block={block}/>
-                                                                </div>
-                                                            ))
-                                                    }
+                                                     {
+                                                         (Array.isArray(content) ? content[0]?.blocks : content?.blocks)?.map((block, i, arr) => (
+                                                             <div key={i}>
+                                                                 <div className="my-4 md:my-8">
+                                                                     <BlogContent block={block} />
+                                                                 </div>
+                                                                 {/* Programmatic Sponsorship Ad Slot In-Between Article Content */}
+                                                                 {i === Math.floor(arr.length / 2) - 1 && (
+                                                                     <div className="my-8 max-w-[700px] mx-auto">
+                                                                         <AdBanner slotId="8888888888" />
+                                                                     </div>
+                                                                 )}
+                                                             </div>
+                                                         ))
+                                                     }
 
                                                 </div>
 
 
                                         <BlogInteraction/>
-                                        {
-                                            similarBlogs!=null && similarBlogs.length ?
-                                            <>
-                                            <h1 className="text-2xl mt-14 mb-10 font-medium">Similar Blogs</h1>
-                                            {
-                                                similarBlogs.map((blog,i)=>{
-                                                    let {author :{personal_info}}=blog;
-                                                    return ( <AnimationWrapper key={i} transition={{duration:1,delay:i*0.08}}>
-                                                            <BlogPostCard content={blog} author={personal_info}/>
-                                                    </AnimationWrapper>)
-                                                })
-                                            }
-                                            </>
-                                            : ""
-                                        }
+                                         {
+                                             similarBlogs != null && similarBlogs.length ?
+                                             <>
+                                                 <h1 className="text-2xl mt-14 mb-8 font-medium">Similar Blogs</h1>
+                                                 <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-none">
+                                                     {
+                                                         similarBlogs.map((blog, i) => {
+                                                             let { author: { personal_info } } = blog;
+                                                             return (
+                                                                 <div key={i} className="min-w-[240px] max-w-[280px] flex-shrink-0">
+                                                                     <AnimationWrapper transition={{ duration: 1, delay: i * 0.08 }}>
+                                                                         <BlogPostCard content={blog} author={personal_info} />
+                                                                     </AnimationWrapper>
+                                                                 </div>
+                                                             )
+                                                         })
+                                                     }
+                                                 </div>
+                                             </>
+                                             : ""
+                                         }
 
                                 
                                 
