@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { toast } from "react-hot-toast";
 
 const AdBanner = ({ slotId }) => {
     useEffect(() => {
@@ -11,6 +12,11 @@ const AdBanner = ({ slotId }) => {
     }, []);
 
     const enableAds = import.meta.env.VITE_ENABLE_ADS === 'true';
+
+    const handleCopyToClipboard = () => {
+        navigator.clipboard.writeText("irfanrs024@gmail.com");
+        toast.success("Email copied to clipboard: irfanrs024@gmail.com");
+    };
 
     return (
         <div className="w-full my-6 bg-grey/30 border border-grey rounded-2xl p-4 flex flex-col items-center justify-center min-h-[250px] relative overflow-hidden group">
@@ -33,14 +39,12 @@ const AdBanner = ({ slotId }) => {
                     <p className="text-xs text-dark-grey max-w-[200px] mb-4 leading-relaxed">
                         Promote your product, bootcamps, or events directly to student developers.
                     </p>
-                    <a 
-                        href="https://mail.google.com/mail/?view=cm&fs=1&to=irfanrs024@gmail.com&su=Advertise+with+us"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-purple !text-white !no-underline text-[11px] font-bold py-2 px-5 rounded-full shadow-sm hover:scale-105 duration-200 transition-transform"
+                    <button 
+                        onClick={handleCopyToClipboard}
+                        className="bg-purple !text-white !no-underline text-[11px] font-bold py-2 px-5 rounded-full shadow-sm hover:scale-105 duration-200 transition-transform cursor-pointer"
                     >
                         Get In Touch
-                    </a>
+                    </button>
                 </div>
             )}
         </div>
