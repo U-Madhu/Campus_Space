@@ -67,59 +67,54 @@ const EditProfile =()=>{
 
 
         }
-        const handleImageUpload=(e)=>{
-
+        const handleImageUpload=async(e)=>{
             e.preventDefault();
-            if(updatedProfileImg){
-                let loadingToast=toast.loading("Uploading...")
-                e.target.setAttribute("disabled",true);
+            const button = e.currentTarget;
 
-                uploadImage(updatedProfileImg)
-                .then(url=>{
-                    //console.log(url);
-                    if(url){
-                        axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/update-profile-img",{url},{
-                            headers:{
-                                'Authorization':`Bearer ${access_token}`
-                            }
-                        })
-                        .then(({data})=>{
-                            let newUserAuth={...userAuth,profile_img:data.profile_img};
-                            storeInSession("user",JSON.stringify(newUserAuth));
-                            setUserAuth(newUserAuth);
-
-                            setProfile(prevProfile => ({
-                                ...prevProfile,
-                                personal_info: {
-                                    ...prevProfile.personal_info,
-                                    profile_img: data.profile_img
-                                }
-                            }));
-
-                            if (profileImgEle.current) {
-                                profileImgEle.current.src = data.profile_img;
-                            }
-
-                            setUpdatedProfileImg(null);
-                            toast.dismiss(loadingToast);
-                            e.target.removeAttribute("disabled");
-
-                            toast.success("Uploaded ");
-                        })
-                        .catch(({response})=>{
-                            toast.dismiss(loadingToast);
-                            e.target.removeAttribute("disabled");
-
-                            toast.error(response.data.error);
-                        }) 
-                    }
-
-                })
-                .catch(err=>{
-                    console.log(err);
-                })
+            if(!updatedProfileImg){
+                return toast.error("Please select an image first.");
             }
 
+            let loadingToast = toast.loading("Uploading...");
+            button.disabled = true;
+
+            try {
+                const url = await uploadImage(updatedProfileImg);
+                if(!url){
+                    throw new Error("Image upload failed. Try again.");
+                }
+
+                const { data } = await axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/update-profile-img", { url }, {
+                    headers: {
+                        'Authorization': `Bearer ${access_token}`
+                    }
+                });
+
+                let newUserAuth = { ...userAuth, profile_img: data.profile_img };
+                storeInSession("user", JSON.stringify(newUserAuth));
+                setUserAuth(newUserAuth);
+
+                setProfile(prevProfile => ({
+                    ...prevProfile,
+                    personal_info: {
+                        ...prevProfile.personal_info,
+                        profile_img: data.profile_img
+                    }
+                }));
+
+                if (profileImgEle.current) {
+                    profileImgEle.current.src = data.profile_img;
+                }
+
+                setUpdatedProfileImg(null);
+                toast.success("Uploaded ");
+            } catch (err) {
+                console.log(err);
+                toast.error(err.response?.data?.error || err.message || "Upload failed");
+            } finally {
+                toast.dismiss(loadingToast);
+                button.disabled = false;
+            }
         }
 
         const handleSubmit=(e)=>{
@@ -207,7 +202,7 @@ const EditProfile =()=>{
 
                                 <input type="file" id="uploadImg" accept=".jpeg, .png, .jpg" hidden onChange={handleImagePreview}/>
 
-                                <button className="btn-light mt-5 max-lg:center lg:w-full px-10" type="submit" onClick={handleImageUpload}> Upload </button>
+                                <button className="btn-light mt-5 max-lg:center lg:w-full px-10" type="button" onClick={handleImageUpload}> Upload </button>
 
                             </div>
 
