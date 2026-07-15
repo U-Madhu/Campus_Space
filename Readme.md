@@ -2,6 +2,8 @@
 
 Campus Space is a modern, feature-rich, and fully responsive full-stack blogging platform built on the MERN stack. It features a custom block editor, nested comments, a secure admin dashboard, publication approval flows, automated email notifications, and robust analytics.
 
+### 🌐 Live Demo: [https://campus-space-26.vercel.app/](https://campus-space-26.vercel.app/)
+
 [![Tech Stack](https://img.shields.io/badge/Stack-MERN-blue.svg)](https://mongodb.com)
 [![Vite](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-brightgreen.svg)](https://vitejs.dev)
 [![Node](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-green.svg)](https://nodejs.org)
