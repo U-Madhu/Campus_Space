@@ -60,7 +60,7 @@ const App = () => {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <UserContext.Provider value={{ userAuth, setuserAuth }}>
+    <UserContext.Provider value={{ userAuth, setuserAuth, setUserAuth: setuserAuth }}>
       <WelcomeModal />
       <Routes>
         <Route path="/editor" element={<Editor />} />
