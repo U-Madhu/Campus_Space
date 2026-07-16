@@ -138,6 +138,13 @@ const Navbar = () => {
             </nav>
 
             <Outlet />
+            <footer className="w-full border-t border-grey mt-20 py-8 px-[5vw] bg-white flex flex-col md:flex-row items-center justify-between gap-4 text-dark-grey text-sm">
+                <p>© {new Date().getFullYear()} Campus Space. All Rights Reserved.</p>
+                <p>Made with 💜 by <a href="https://www.linkedin.com/in/irfanrs/" target="_blank" rel="noopener noreferrer" className="text-purple underline hover:text-black font-semibold">Indian</a></p>
+                <a href="https://irfansudarani.netlify.app/" target="_blank" rel="noopener noreferrer" className="hover:text-black font-medium transition-colors">
+                    Contact Us
+                </a>
+            </footer>
         </>
     );
 };

@@ -243,10 +243,10 @@ const EditProfile =()=>{
                                             Object.keys(social_links).map((key,i)=>{
 
                                                 let link=social_links[key];
+                                                let displayPlaceholder = key === 'facebook' ? 'linkedin' : key;
+                                                let iconName = key === 'facebook' ? 'linkedin' : key;
 
-                                               
-
-                                                return <InputBox key={i} name={key} type="text" value={link} placeholder="https://" icon={"fi "+(key!='website'? "fi-brands-"+key:"fi-rr-globe")}/>
+                                                return <InputBox key={i} name={key} type="text" value={link} placeholder={`https:// (for ${displayPlaceholder})`} icon={"fi "+(iconName!='website'? "fi-brands-"+iconName:"fi-rr-globe")}/>
                                             })
                                         }
 
