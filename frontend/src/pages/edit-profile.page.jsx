@@ -8,6 +8,7 @@ import toast, { Toaster } from "react-hot-toast";
 import InputBox from "../components/input.component";
 import { uploadImage } from "../common/cloudinary";
 import { storeInSession } from "../common/session";
+import { compressImage } from "../common/image-resizer";
 
 const EditProfile =()=>{
 
@@ -51,21 +52,24 @@ const EditProfile =()=>{
             setCharactersLeft(bioLimit-e.target.value.length)
         }
 
-        const handleImagePreview =(e)=>{
+        const handleImagePreview = async (e) => {
+            let img = e.target.files[0];
+            if (!img) return;
 
-            //console.log(e.target.files[0]);
-
-            let img=e.target.files[0];
-
-            profileImgEle.current.src=URL.createObjectURL(img);
-
-            setUpdatedProfileImg(img);
-
-
-
-
-
-
+            let loadingToast = toast.loading("Optimizing image...");
+            try {
+                // Compress profile image to 600x600px max dimensions
+                const compressedImg = await compressImage(img, 600, 600, 0.75);
+                profileImgEle.current.src = URL.createObjectURL(compressedImg);
+                setUpdatedProfileImg(compressedImg);
+                toast.success("Image optimized!");
+            } catch (err) {
+                console.error("Compression failed:", err);
+                profileImgEle.current.src = URL.createObjectURL(img);
+                setUpdatedProfileImg(img);
+            } finally {
+                toast.dismiss(loadingToast);
+            }
         }
         const handleImageUpload=async(e)=>{
             e.preventDefault();

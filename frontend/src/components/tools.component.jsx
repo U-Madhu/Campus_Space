@@ -9,6 +9,7 @@ import Quote from '@editorjs/quote';
 import InlineCode from '@editorjs/inline-code';
 
 import { uploadImage } from '../common/cloudinary';
+import { compressImage } from '../common/image-resizer';
 
 
 const uploadImageByUrl=(e)=>{
@@ -29,16 +30,26 @@ const uploadImageByUrl=(e)=>{
     })
 
 }
-const uploadImageeByFile=(e)=>{
-  return    uploadImage(e).then(url=>{
-        if(url){
-            return{
-                success:1,
-                file:{url}
-            }
+const uploadImageeByFile = async (e) => {
+    try {
+        const compressedImg = await compressImage(e, 1000, 1000, 0.8);
+        const url = await uploadImage(compressedImg);
+        if (url) {
+            return {
+                success: 1,
+                file: { url }
+            };
         }
-    })
-
+    } catch (err) {
+        console.error("Editor image upload compression failed:", err);
+        const url = await uploadImage(e);
+        if (url) {
+            return {
+                success: 1,
+                file: { url }
+            };
+        }
+    }
 }
 
 export const tools={

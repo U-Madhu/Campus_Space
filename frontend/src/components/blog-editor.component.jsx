@@ -5,6 +5,7 @@ import defaultBanner from "../imgs/blog banner.png";
 import { uploadImage } from "../common/cloudinary";
 import { useEffect, useRef } from "react";
 import { Toaster,toast } from "react-hot-toast";
+import { compressImage } from "../common/image-resizer";
 import { EditorContext } from "../pages/editor.pages";
 import {useContext} from 'react'
 import { UserContext } from "../App";
@@ -73,22 +74,26 @@ const BlogEditor=()=>{
         
     },[])
 
-    const handleBannerUpload=(e)=>{
-        //console.log(e);
-        let img=e.target.files[0];
-        if(img){
-            let loadingToast=toast.loading("Uploading...")
-            uploadImage(img).then((url)=>{
-                if(url){
-
-                    toast.dismiss(loadingToast);
-                    toast.success("Uploaded 👍")
-                    //blogBannerRef.current.src=url;
-
-                    setBlog({...blog, banner:url})
-
+    const handleBannerUpload = async (e) => {
+        let img = e.target.files[0];
+        if (img) {
+            let loadingToast = toast.loading("Compressing & Uploading...");
+            try {
+                // Compress banner image (wider aspect ratio, e.g. max 1200px)
+                const compressedImg = await compressImage(img, 1200, 800, 0.8);
+                const url = await uploadImage(compressedImg);
+                if (url) {
+                    toast.success("Uploaded 👍");
+                    setBlog({ ...blog, banner: url });
+                } else {
+                    toast.error("Upload failed");
                 }
-            })
+            } catch (err) {
+                console.error("Banner upload failed:", err);
+                toast.error("Failed to process image");
+            } finally {
+                toast.dismiss(loadingToast);
+            }
         }
     }
 
