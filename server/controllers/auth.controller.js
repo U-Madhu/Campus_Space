@@ -102,7 +102,7 @@ export const googleAuth = async (req, res) => {
         picture = picture.replace("s96-c", "s384-c");
 
         let user = await User.findOne({ "personal_info.email": email })
-        .select("personal_info.fullname personal_info.username personal_info.profile_img google_auth")
+        .select("personal_info.fullname personal_info.username personal_info.profile_img google_auth role")
         .then((u) => u || null)
         .catch(err => {
             return res.status(500).json({ "error": err.message });
