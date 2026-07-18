@@ -21,7 +21,7 @@ const HomePage = () => {
 
     let [pageState,setPageState]=useState('home')
 
-    let categories=["programming","cooking","scholrships","code","interview","finance","travel","experience"]
+    let categories=["interview","scholrships","cs","ec","","travel","eee","travel"]
 
 
 
