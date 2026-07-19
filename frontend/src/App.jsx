@@ -19,6 +19,7 @@ import AdminUsers from "./pages/admin-users.page";
 import AdminAnalytics from "./pages/admin-analytics.page";
 import WelcomeModal from "./components/welcome-modal.component";
 import VisitorTracker from "./common/visitor-tracker";
+import AboutPage from "./pages/about.page";
 
 export const UserContext = createContext({});
 
@@ -68,7 +69,8 @@ const App = () => {
         <Route path="/editor/:blog_id" element={<Editor />} />
         <Route path="/" element={<Navbar />}>
           <Route index element={<HomePage />} />
-          
+          <Route path="about" element={<AboutPage />} />
+
           {/* User Dashboard */}
           <Route path="dashboard" element={<SideNav />}>
             <Route path="blogs" element={<ManagesBlogs />} />

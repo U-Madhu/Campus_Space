@@ -3,6 +3,16 @@ import VisitorLog from "../models/VisitorLog.js";
 
 const router = express.Router();
 
+// Public Visitor Count Endpoint for Footer
+router.get("/visitor-count", async (req, res) => {
+    try {
+        const totalVisits = await VisitorLog.countDocuments({});
+        return res.status(200).json({ totalVisits });
+    } catch (err) {
+        return res.status(200).json({ totalVisits: 0 });
+    }
+});
+
 // 1. Silent Visitor Tracker Endpoint
 router.post("/track-visitor", async (req, res) => {
     try {

@@ -3,10 +3,12 @@ import logo from "../imgs/logo.png";
 import { useContext, useState, useRef, useEffect } from "react";
 import { UserContext } from "../App";
 import UserNavigationPanel from "./user-navigation.component";
+import axios from "axios";
 
 const Navbar = () => {
     const [searchBoxVisibility, SetsearchBoxVisibility] = useState(false);
     const [userNavPanel, setUserNavPanel] = useState(false);
+    const [totalVisits, setTotalVisits] = useState(0);
 
     let navigate = useNavigate();
     const userNavRef = useRef();
@@ -24,13 +26,21 @@ const Navbar = () => {
         }
     };
 
-    const handleBlur = () => {
-        setTimeout(() => {
-            setUserNavPanel(false);
-        }, 200);
+    const fetchVisitorCount = async () => {
+        try {
+            const domain = import.meta.env.VITE_SERVER_DOMAIN || "http://localhost:3000";
+            const { data } = await axios.get(domain + "/visitor-count");
+            if (data && typeof data.totalVisits === "number") {
+                setTotalVisits(data.totalVisits);
+            }
+        } catch (err) {
+            console.error("Failed to fetch visitor count:", err.message);
+        }
     };
 
     useEffect(() => {
+        fetchVisitorCount();
+
         const handleClickOutside = (event) => {
             if (userNavRef.current && !userNavRef.current.contains(event.target)) {
                 setUserNavPanel(false);
@@ -61,8 +71,8 @@ const Navbar = () => {
                     >
                         <input
                             type="text"
-                            placeholder="Search blogs, companies, topics..."
-                            className="w-full md:w-auto bg-grey p-4 pl-6 pr-[12%] md:pr-6 rounded-full placeholder:text-dark-grey md:pl-12 text-sm outline-none focus:border-purple"
+                            placeholder="Search"
+                            className="w-full md:w-auto bg-grey p-4 pl-6 pr-[12%] md:pr-6 rounded-full placeholder:text-dark-grey md:pl-12"
                             onKeyDown={handleSearch}
                         />
                         <i className="fi fi-rr-search absolute right-[10%] md:pointer-events-none md:left-5 top-1/2 -translate-y-1/2 text-xl text-dark-grey"></i>
@@ -127,13 +137,89 @@ const Navbar = () => {
                 </main>
             </div>
 
-            {/* Compact Slim Sticky Footer */}
-            <footer className="w-full border-t border-grey mt-auto py-3 px-[5vw] bg-white flex flex-col sm:flex-row items-center justify-between gap-2 text-dark-grey text-xs">
-                <p>© {new Date().getFullYear()} Campus Space. All Rights Reserved.</p>
-                <p>Made with 💜 by <a href="https://www.linkedin.com/in/irfanrs/" target="_blank" rel="noopener noreferrer" className="text-purple underline hover:text-black font-semibold">Indian</a></p>
-                <a href="https://irfansudarani.netlify.app/" target="_blank" rel="noopener noreferrer" className="hover:text-black font-medium transition-colors">
-                    Contact Us
-                </a>
+            {/* Gorgeous Modern Dark Footer */}
+            <footer className="w-full bg-black text-white mt-auto pt-10 pb-6 px-[5vw] md:px-[7vw] lg:px-[10vw] border-t-4 border-purple relative overflow-hidden font-jakarta">
+                {/* Background Ambient Glow */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-purple/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
+                    {/* Brand Column */}
+                    <div className="md:col-span-2 flex flex-col gap-3">
+                        <div className="flex items-center gap-3">
+                            <img src={logo} className="w-9 h-9 object-contain" alt="Campus Space Logo" />
+                            <span className="font-bold text-xl tracking-tight text-white">Campus Space</span>
+                        </div>
+                        <p className="text-xs text-grey leading-relaxed max-w-md">
+                            Empowering student developers with authentic placement interview experiences, coding resources, and peer guidance.
+                        </p>
+                    </div>
+
+                    {/* Navigation Column */}
+                    <div>
+                        <h4 className="font-bold text-sm text-purple uppercase tracking-wider mb-3">Quick Links</h4>
+                        <ul className="flex flex-col gap-2 text-xs text-grey">
+                            <li>
+                                <Link to="/" className="hover:text-white transition-colors">Home & Experiences</Link>
+                            </li>
+                            <li>
+                                <Link to="/editor" className="hover:text-white transition-colors">Write Experience</Link>
+                            </li>
+                            <li>
+                                <Link to="/about" className="hover:text-white transition-colors font-semibold text-purple">
+                                    About Platform
+                                </Link>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* Developer & Contact Column */}
+                    <div>
+                        <h4 className="font-bold text-sm text-purple uppercase tracking-wider mb-3">Connect & Contact</h4>
+                        <ul className="flex flex-col gap-2 text-xs text-grey">
+                            <li>
+                                <a
+                                    href="https://www.linkedin.com/in/irfanrs/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 hover:text-purple transition-colors"
+                                >
+                                    <i className="fi fi-brands-linkedin text-sm"></i>
+                                    <span>LinkedIn Profile</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://irfansudarani.netlify.app/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 hover:text-purple transition-colors"
+                                >
+                                    <i className="fi fi-rr-globe text-sm"></i>
+                                    <span>Portfolio & Contact</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                {/* Sub-Footer Copyright & Live Visit Counter Bar */}
+                <div className="max-w-[1200px] mx-auto pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-grey">
+                    <p>© {new Date().getFullYear()} Campus Space. All Rights Reserved.</p>
+                    
+                    {/* Live Visit Count Badge */}
+                    <div className="bg-white/10 px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 border border-white/10 shadow-inner">
+                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                        <span className="text-white font-mono">{totalVisits.toLocaleString()}</span>
+                        <span className="text-grey font-medium">Total Visits</span>
+                    </div>
+
+                    {/* Plain text without hyperlink */}
+                    <p className="flex items-center gap-1 text-grey">
+                        <span>Made with</span>
+                        <span className="text-purple text-sm">💜</span>
+                        <span>by Indian</span>
+                    </p>
+                </div>
             </footer>
         </div>
     );
