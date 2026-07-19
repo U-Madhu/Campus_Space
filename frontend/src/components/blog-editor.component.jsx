@@ -207,7 +207,7 @@ const BlogEditor = () => {
                 <p className="max-md:hidden text-black line-clamp-1 w-full font-jakarta font-semibold">
                     {title?.length ? title : "New Blog"}
                 </p>
-                <div className="flex gap-4 ml-auto">
+                <div className="flex gap-4 ml-auto font-jakarta">
                     <button className="btn-dark py-2" onClick={handlePublishEvent}>
                         Publish
                     </button>
@@ -277,7 +277,7 @@ const BlogEditor = () => {
                             ref={titleRef}
                             defaultValue={title}
                             placeholder="Blog Title (e.g. Amazon SDE Interview Experience / My Journey)"
-                            className="text-4xl font-jakarta font-bold w-full h-auto min-h-[60px] outline-none resize-none overflow-hidden mt-10 leading-tight placeholder:opacity-40 tracking-tight"
+                            className="text-4xl font-jakarta font-extrabold w-full h-auto min-h-[60px] outline-none resize-none overflow-hidden mt-10 leading-tight placeholder:opacity-40 tracking-tight"
                             onKeyDown={handleTitleKeyDown}
                             onChange={handleTitleChange}
                         ></textarea>
@@ -293,16 +293,16 @@ const BlogEditor = () => {
                         )}
 
                         {/* General Article EditorJS Container with Distinct Card Blocks */}
-                        <div className="my-8">
+                        <div className="my-8 font-jakarta">
                             {blogType === "interview" && (
-                                <h4 className="font-bold text-lg text-black mb-3">Additional Notes & Story</h4>
+                                <h4 className="font-bold text-lg text-black mb-3 font-jakarta">Additional Notes & Story</h4>
                             )}
-                            <div id="textEditor" className="font-jakarta min-h-[150px] w-full outline-none"></div>
+                            <div id="textEditor" className="min-h-[150px] w-full outline-none"></div>
 
                             <button
                                 type="button"
                                 onClick={handleAddNewBlock}
-                                className="mt-4 bg-purple text-white hover:bg-purple/90 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95"
+                                className="mt-4 bg-purple text-white hover:bg-purple/90 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95 font-jakarta"
                             >
                                 <i className="fi fi-rr-plus"></i>
                                 <span>Add New Text Box</span>

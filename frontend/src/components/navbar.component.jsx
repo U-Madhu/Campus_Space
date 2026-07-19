@@ -144,7 +144,7 @@ const Navbar = () => {
 
                 <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
                     {/* Brand Column */}
-                    <div className="md:col-span-2 flex flex-col gap-3">
+                    <div className="md:col-span-2 flex flex-col items-center md:items-start text-center md:text-left gap-3">
                         <div className="flex items-center gap-3">
                             <img src={logo} className="w-9 h-9 object-contain" alt="Campus Space Logo" />
                             <span className="font-bold text-xl tracking-tight text-white">Campus Space</span>
@@ -155,9 +155,9 @@ const Navbar = () => {
                     </div>
 
                     {/* Navigation Column */}
-                    <div>
+                    <div className="flex flex-col items-center md:items-start text-center md:text-left">
                         <h4 className="font-bold text-sm text-purple uppercase tracking-wider mb-3">Quick Links</h4>
-                        <ul className="flex flex-col gap-2 text-xs text-grey">
+                        <ul className="flex flex-col items-center md:items-start gap-2 text-xs text-grey">
                             <li>
                                 <Link to="/" className="hover:text-white transition-colors">Home & Experiences</Link>
                             </li>
@@ -173,9 +173,9 @@ const Navbar = () => {
                     </div>
 
                     {/* Developer & Contact Column */}
-                    <div>
+                    <div className="flex flex-col items-center md:items-start text-center md:text-left">
                         <h4 className="font-bold text-sm text-purple uppercase tracking-wider mb-3">Connect & Contact</h4>
-                        <ul className="flex flex-col gap-2 text-xs text-grey">
+                        <ul className="flex flex-col items-center md:items-start gap-2 text-xs text-grey">
                             <li>
                                 <a
                                     href="https://www.linkedin.com/in/irfanrs/"
@@ -203,7 +203,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Sub-Footer Copyright & Live Visit Counter Bar */}
-                <div className="max-w-[1200px] mx-auto pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-grey">
+                <div className="max-w-[1200px] mx-auto pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-grey text-center sm:text-left">
                     <p>© {new Date().getFullYear()} Campus Space. All Rights Reserved.</p>
                     
                     {/* Live Visit Count Badge */}

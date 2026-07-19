@@ -81,26 +81,26 @@ const BlogPage = () => {
                         <img src={banner} className="aspect-video" alt="Blog Banner" />
 
                         <div className="mt-12 font-jakarta">
-                            <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
+                            <h2 className="text-3xl font-extrabold text-black tracking-tight leading-tight">{title}</h2>
 
-                            <div className="flex max-sm:flex-col justify-between my-8">
+                            <div className="flex max-sm:flex-col justify-between my-8 font-jakarta">
                                 <div className="flex gap-5 items-start">
                                     <img src={profile_img} className="w-12 h-12 rounded-full" alt="Profile" />
 
-                                    <p className="capitalize">
+                                    <p className="capitalize text-sm font-semibold">
                                         {fullname}
                                         <br />
                                         @
-                                        <Link to={`/user/${author_username}`} className="underline">{author_username}</Link>
+                                        <Link to={`/user/${author_username}`} className="underline text-purple">{author_username}</Link>
                                     </p>
                                 </div>
-                                <p className="text-dark-grey opacity-75 max-sm:mt-6 max-sm:ml-12 max-sm:pl-5"> Published on {getDay(publishedAt)}</p>
+                                <p className="text-dark-grey text-xs opacity-75 max-sm:mt-6 max-sm:ml-12 max-sm:pl-5"> Published on {getDay(publishedAt)}</p>
                             </div>
                         </div>
 
                         <BlogInteraction />
 
-                        <div className="my-12 font-jakarta blog-page-content">
+                        <div className="my-12 font-jakarta blog-page-content leading-relaxed text-black">
                             {/* Structured Predefined Interview Experience Data */}
                             {structuredInterview && (
                                 <InterviewStructureViewer data={structuredInterview} />
@@ -126,7 +126,7 @@ const BlogPage = () => {
 
                         {similarBlogs != null && similarBlogs.length ? (
                             <>
-                                <h1 className="text-2xl mt-14 mb-10 font-medium">Similar Blogs</h1>
+                                <h1 className="text-2xl mt-14 mb-10 font-bold font-jakarta text-black">Similar Blogs</h1>
 
                                 {similarBlogs.map((blogItem, i) => {
                                     let { author: { personal_info } } = blogItem;
