@@ -178,8 +178,19 @@ export const createBlog = (req, res) => {
         if (!banner.length) {
             return res.status(403).json({ error: "You must provide blog banner to publish it" });
         }
-        if (!content.blocks.length) {
-            return res.status(403).json({ error: "There must be some bloog content to publish it" });
+        const hasBlocks = content && Array.isArray(content.blocks) && content.blocks.length > 0;
+        const si = content && content.structured_interview;
+        const hasStructured = si && (
+            si.selection_process?.notes ||
+            (si.selection_process?.rounds && Object.keys(si.selection_process.rounds).length > 0) ||
+            (si.coding?.questions && si.coding.questions.length > 0) ||
+            (si.core_concepts?.questions && si.core_concepts.questions.length > 0) ||
+            (si.project_related?.questions && si.project_related.questions.length > 0) ||
+            (si.personality_related?.questions && si.personality_related.questions.length > 0)
+        );
+
+        if (!hasBlocks && !hasStructured) {
+            return res.status(403).json({ error: "There must be some blog content to publish it" });
         }
         if (!tags.length || tags.length > 10) {
             return res.status(403).json({ error: "Provide Tags in order to publish the blog," });

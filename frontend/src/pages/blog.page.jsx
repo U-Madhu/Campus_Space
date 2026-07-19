@@ -77,11 +77,11 @@ const BlogPage = () => {
                 <BlogContext.Provider value={{ blog, setBlog, islikedByUser, setLikedByUser, commentsWrapper, setCommentsWrapper, totalParentCommentsLoaded, setTotalParentCommentsLoaded }}>
                     <CommentContainer />
 
-                    <div className="max-w-[700px] center py-10 max-lg:px-[5vw]">
-                        <img src={banner} className="aspect-video" alt="Blog Banner" />
+                    <div className="max-w-[850px] center py-10 max-lg:px-[5vw]">
+                        <img src={banner} className="aspect-video rounded-2xl w-full border border-grey" alt="Blog Banner" />
 
-                        <div className="mt-12 font-jakarta">
-                            <h2 className="text-3xl font-extrabold text-black tracking-tight leading-tight">{title}</h2>
+                        <div className="mt-10 font-jakarta">
+                            <h2 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight leading-tight">{title}</h2>
 
                             <div className="flex max-sm:flex-col justify-between my-8 font-jakarta">
                                 <div className="flex gap-5 items-start">
@@ -100,7 +100,7 @@ const BlogPage = () => {
 
                         <BlogInteraction />
 
-                        <div className="my-12 font-jakarta blog-page-content leading-relaxed text-black">
+                        <div className="my-10 font-jakarta blog-page-content leading-relaxed text-black">
                             {/* Structured Predefined Interview Experience Data */}
                             {structuredInterview && (
                                 <InterviewStructureViewer data={structuredInterview} />

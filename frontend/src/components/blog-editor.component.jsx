@@ -12,6 +12,8 @@ import EditorJS from '@editorjs/editorjs';
 import { tools } from './tools.component';
 import axios from "axios";
 import InterviewStructureEditor from "./interview-structure-editor.component";
+import InterviewStructureViewer from "./interview-structure-viewer.component";
+import BlogContent from "./blog-content.component";
 
 const BlogEditor = () => {
     const navigate = useNavigate();
@@ -20,7 +22,11 @@ const BlogEditor = () => {
     let { blog, setBlog, textEditor, setTextEditor, setEditorState } = useContext(EditorContext);
     let { blog_id = "", title = "", banner = "", content = { blocks: [] }, tags = [], des = "" } = blog || {};
 
-    let { userAuth: { access_token } } = useContext(UserContext);
+    let { userAuth: { access_token, profile_img, username, fullname } } = useContext(UserContext);
+
+    // Live Reader Preview Modal State
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewContent, setPreviewContent] = useState(null);
 
     // Initializing Structured Interview State safely
     const [structuredData, setStructuredData] = useState(() => {
@@ -50,7 +56,7 @@ const BlogEditor = () => {
     });
 
     useEffect(() => {
-        if (textEditor && !textEditor.isReady) {
+        if (!textEditor || !textEditor.isReady) {
             const initialContent = Array.isArray(content) ? content[0] : content;
             const blocksData = (initialContent && initialContent.blocks) ? initialContent : { blocks: [] };
 
@@ -84,10 +90,13 @@ const BlogEditor = () => {
         }
     }, [title]);
 
-    const handleAddNewBlock = () => {
-        if (textEditor && textEditor.isReady) {
+    const handleAddNewBlock = async () => {
+        if (textEditor) {
             try {
-                const count = textEditor.blocks.getBlocksCount();
+                if (textEditor.isReady && typeof textEditor.isReady.then === 'function') {
+                    await textEditor.isReady;
+                }
+                const count = textEditor.blocks ? textEditor.blocks.getBlocksCount() : 0;
                 textEditor.blocks.insert('paragraph', { text: '' }, {}, count, true);
             } catch (err) {
                 console.error("Failed to insert block:", err);
@@ -137,8 +146,11 @@ const BlogEditor = () => {
 
     const getCombinedContent = async () => {
         let blocks = [];
-        if (textEditor && textEditor.isReady) {
+        if (textEditor) {
             try {
+                if (textEditor.isReady && typeof textEditor.isReady.then === 'function') {
+                    await textEditor.isReady;
+                }
                 const editorData = await textEditor.save();
                 blocks = editorData.blocks || [];
             } catch (err) {
@@ -151,6 +163,12 @@ const BlogEditor = () => {
         };
     };
 
+    const handleOpenPreview = async () => {
+        const fullContent = await getCombinedContent();
+        setPreviewContent(fullContent);
+        setIsPreviewOpen(true);
+    };
+
     const handlePublishEvent = async () => {
         if (!banner || !banner.length) {
             return toast.error("Upload a blog banner to publish it");
@@ -160,7 +178,30 @@ const BlogEditor = () => {
         }
 
         const fullContent = await getCombinedContent();
-        setBlog({ ...blog, content: fullContent });
+        
+        // Validate if content is present (either EditorJS blocks OR structured interview questions/notes)
+        const hasBlocks = fullContent.blocks && fullContent.blocks.length > 0;
+        const si = fullContent.structured_interview;
+        const hasStructured = si && (
+            si.selection_process?.notes ||
+            (si.selection_process?.rounds && Object.keys(si.selection_process.rounds).length > 0) ||
+            (si.coding?.questions && si.coding.questions.length > 0) ||
+            (si.core_concepts?.questions && si.core_concepts.questions.length > 0) ||
+            (si.project_related?.questions && si.project_related.questions.length > 0) ||
+            (si.personality_related?.questions && si.personality_related.questions.length > 0)
+        );
+
+        if (!hasBlocks && !hasStructured) {
+            return toast.error("Please add blog content or fill in structured interview sections before publishing");
+        }
+
+        // Auto-generate description if empty for IT/Tech structured posts
+        let blogDes = des;
+        if ((!blogDes || !blogDes.length) && hasStructured) {
+            blogDes = `Interview experience for ${title} containing selection process, coding questions, and core concept preparation tips.`.slice(0, 195);
+        }
+
+        setBlog({ ...blog, des: blogDes, content: fullContent });
         setEditorState("publish");
     };
 
@@ -171,10 +212,10 @@ const BlogEditor = () => {
             return toast.error("Write blog title before saving it as a draft");
         }
 
+        const fullContent = await getCombinedContent();
+
         let loadingToast = toast.loading("Saving...");
         e.target.classList.add('disable');
-
-        const fullContent = await getCombinedContent();
 
         let blogObj = {
             title, banner, des, content: fullContent, tags, draft: true
@@ -200,14 +241,26 @@ const BlogEditor = () => {
 
     return (
         <>
-            <nav className="navbar">
+            <nav className="navbar z-30">
                 <Link to='/' className="flex-none w-10">
                     <img src={logo} />
                 </Link>
-                <p className="max-md:hidden text-black line-clamp-1 w-full font-jakarta font-semibold">
+
+                <p className="max-md:hidden text-black line-clamp-1 w-full font-jakarta font-semibold ml-2">
                     {title?.length ? title : "New Blog"}
                 </p>
-                <div className="flex gap-4 ml-auto font-jakarta">
+
+                <div className="flex items-center gap-3 ml-auto font-jakarta">
+                    {/* Live Reader Preview Button */}
+                    <button
+                        type="button"
+                        onClick={handleOpenPreview}
+                        className="bg-grey hover:bg-black hover:text-white text-black py-2 px-4 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all"
+                    >
+                        <i className="fi fi-rr-eye text-sm"></i>
+                        <span className="max-sm:hidden">Preview</span>
+                    </button>
+
                     <button className="btn-dark py-2" onClick={handlePublishEvent}>
                         Publish
                     </button>
@@ -218,6 +271,63 @@ const BlogEditor = () => {
             </nav>
 
             <Toaster />
+
+            {/* FULL-SCREEN LIVE READER PREVIEW MODAL */}
+            {isPreviewOpen && (
+                <div className="fixed inset-0 z-50 bg-white overflow-y-auto font-jakarta">
+                    {/* Floating Top Navigation Bar */}
+                    <div className="sticky top-0 z-50 bg-black text-white px-[5vw] py-3.5 flex items-center justify-between shadow-lg">
+                        <div className="flex items-center gap-3">
+                            <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-grey">Live Reader Preview</span>
+                            <span className="text-xs text-dark-grey hidden md:inline">| Exact layout readers will see on the published page</span>
+                        </div>
+                        <button
+                            onClick={() => setIsPreviewOpen(false)}
+                            className="bg-white/20 hover:bg-white text-white hover:text-black px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5"
+                        >
+                            <i className="fi fi-rr-arrow-left text-xs"></i>
+                            <span>Back to Editor</span>
+                        </button>
+                    </div>
+
+                    {/* Exact Published Page View */}
+                    <div className="max-w-[850px] mx-auto py-10 px-[5vw]">
+                        <img src={banner || defaultBanner} className="aspect-video rounded-2xl w-full border border-grey object-cover" alt="Blog Banner" />
+
+                        <div className="mt-10 font-jakarta">
+                            <h2 className="text-3xl sm:text-4xl font-extrabold text-black tracking-tight leading-tight">
+                                {title?.length ? title : "Untitled Blog Preview"}
+                            </h2>
+
+                            <div className="flex max-sm:flex-col justify-between my-8 font-jakarta">
+                                <div className="flex gap-5 items-start">
+                                    <img src={profile_img} className="w-12 h-12 rounded-full" alt="Profile" />
+                                    <p className="capitalize text-sm font-semibold">
+                                        {fullname || "Author"}
+                                        <br />
+                                        @<span className="underline text-purple">{username || "username"}</span>
+                                    </p>
+                                </div>
+                                <p className="text-dark-grey text-xs opacity-75 max-sm:mt-6 max-sm:ml-12 max-sm:pl-5"> Published on Today (Preview)</p>
+                            </div>
+                        </div>
+
+                        {/* Content Container */}
+                        <div className="my-10 font-jakarta blog-page-content leading-relaxed text-black">
+                            {previewContent?.structured_interview && (
+                                <InterviewStructureViewer data={previewContent.structured_interview} />
+                            )}
+
+                            {previewContent?.blocks && previewContent.blocks.map((block, i) => (
+                                <div key={i} className="my-4 md:my-8">
+                                    <BlogContent block={block} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <AnimationWrapper>
                 <section>

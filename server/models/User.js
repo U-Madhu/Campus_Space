@@ -1,7 +1,12 @@
 import mongoose, { Schema } from "mongoose";
 
-let profile_imgs_name_list = ["Garfield", "Tinkerbell", "Annie", "Loki", "Cleo", "Angel", "Bob", "Mia", "Coco", "Gracie", "Bear", "Bella", "Abby", "Harley", "Cali", "Leo", "Luna", "Jack", "Felix", "Kiki"];
-let profile_imgs_collections_list = ["notionists-neutral", "adventurer-neutral", "fun-emoji"];
+let default_avatar_list = [
+    "/default-avatars/avatar1.jpg",
+    "/default-avatars/avatar2.jpg",
+    "/default-avatars/avatar3.jpg",
+    "/default-avatars/avatar4.jpg",
+    "/default-avatars/avatar5.jpg"
+];
 
 const userSchema = mongoose.Schema({
 
@@ -31,9 +36,9 @@ const userSchema = mongoose.Schema({
         },
         profile_img: {
             type: String,
-            default: () => {
-                return `https://api.dicebear.com/6.x/${profile_imgs_collections_list[Math.floor(Math.random() * profile_imgs_collections_list.length)]}/svg?seed=${profile_imgs_name_list[Math.floor(Math.random() * profile_imgs_name_list.length)]}`
-            } 
+            default: function() {
+                return default_avatar_list[Math.floor(Math.random() * default_avatar_list.length)];
+            }
         },
     },
     social_links: {
