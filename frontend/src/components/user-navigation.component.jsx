@@ -6,7 +6,7 @@ import { removeFromSession } from "../common/session";
 
 const UserNavigationPanel = ({ closePanel }) => {
 
-    const { userAuth: { username }, setUserAuth } = useContext(UserContext);
+    const { userAuth: { username, role }, setUserAuth } = useContext(UserContext);
 
     const signOutUser = () => {
         removeFromSession("user");
@@ -29,6 +29,13 @@ const UserNavigationPanel = ({ closePanel }) => {
                 <Link to="/dashboard/blogs" className="link pl-8 py-4" onClick={closePanel}>
                     Dashboard
                 </Link>
+
+                {role === 'admin' && (
+                    <Link to="/admin-panel/analytics" className="link pl-8 py-4 text-purple font-semibold flex items-center gap-2" onClick={closePanel}>
+                        <i className="fi fi-rr-shield"></i>
+                        <span>Admin Panel</span>
+                    </Link>
+                )}
 
                 <Link to="/settings/edit-profile" className="link pl-8 py-4" onClick={closePanel}>
                     Settings

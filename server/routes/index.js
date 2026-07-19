@@ -5,6 +5,7 @@ import blogRoutes from "./blog.routes.js";
 import commentRoutes from "./comment.routes.js";
 import notificationRoutes from "./notification.routes.js";
 import adminRoutes from "./admin.routes.js";
+import analyticsRoutes from "./analytics.routes.js";
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use(blogRoutes);
 router.use(commentRoutes);
 router.use(notificationRoutes);
 router.use("/admin", adminRoutes);
+router.use(analyticsRoutes);
 
 export default router;

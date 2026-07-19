@@ -119,6 +119,27 @@
     max-width: 900px;
 }
 
+/* Visually separate each text box block inside #textEditor */
+#textEditor .ce-block {
+    margin-bottom: 14px !important;
+}
+
+#textEditor .ce-block__content {
+    max-width: 100% !important;
+    background-color: #F9FAFB;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 14px;
+    padding: 14px 18px;
+    transition: all 0.2s ease-in-out;
+}
+
+#textEditor .ce-block__content:focus-within,
+#textEditor .ce-block--selected .ce-block__content {
+    border-color: #8B46FF;
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(139, 70, 255, 0.1);
+}
+
 .cdx-settings-button[data-tune='withBorder'],
 .cdx-settings-button[data-tune='withBackground'],
 .cdx-settings-button[data-tune='stretched'] {

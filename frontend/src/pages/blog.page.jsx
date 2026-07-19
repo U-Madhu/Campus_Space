@@ -9,63 +9,55 @@ import BlogContent from "../components/blog-content.component"
 import CommentContainer, { fetchComments } from "../components/comments.component"
 import axios from "axios"
 import AdBanner from "../components/ad-banner.component"
+import InterviewStructureViewer from "../components/interview-structure-viewer.component"
 
 export const blogStructure={
     title:'',
     des:'',
-    tags:[],
-    content:{blocks:[]},
-    
-    author:{personal_info:{}},
+    content:[],
+    author:{ personal_info:{}},
     banner:'',
     publishedAt:''
 }
 
-export const BlogContext= createContext({});
+export const BlogContext=createContext({ })
 
-const BlogPage =()=>{
-    let {blog_id} =useParams()
+const BlogPage = () => {
+    let {blog_id}=useParams();
 
-    const [blog,setBlog]=useState(blogStructure);
+    const [blog,setBlog] = useState(blogStructure);
     const [similarBlogs,setSimilarBlogs]=useState(null);
     const [loading,setLoading]=useState(true);
     const [islikedByUser,setLikedByUser]=useState(false);
     const [commentsWrapper,setCommentsWrapper]=useState(false);
-    const [totalParentCommentLoaded,setTotalParentCommentLoaded]=useState(0);
+    const [totalParentCommentsLoaded,setTotalParentCommentsLoaded]=useState(0);
 
+    let {title,content,banner,author:{personal_info:{fullname,username:author_username,profile_img}},publishedAt}=blog;
 
-    let {title,content,banner,tags,author:{personal_info:{fullname,username:author_username,profile_img}},publishedAt}=blog;
+    const fetchBlog=()=>{
+        axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/get-blog',{blog_id})
+        .then(async ({data:{blog}})=>{
 
-    const fetcBlog=()=>{
-        axios.post(import.meta.env.VITE_SERVER_DOMAIN +"/get-blog",{blog_id})
-        .then(async({data:{blog}})=>{
+            blog.comments=await fetchComments({blog_id:blog._id,setParentCommentCountFun:setTotalParentCommentsLoaded})
 
-            blog.comments=await fetchComments({blog_id:blog._id,setParentCommentCountFun:setTotalParentCommentLoaded})
-
-            setBlog(blog);
-
-            console.log(blog);
-
-            axios.post(import.meta.env.VITE_SERVER_DOMAIN+"/search-blogs",{tag:blog.tags[0],limit:6,eliminate_blog:blog_id})
-            .then(({data})=>{
-
-                setSimilarBlogs(data.blogs);
-
-                //console.log(data.blogs)
-            })
+            setBlog(blog)
             
+            axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/search-blogs',{tag:blog.tags[0],limit:6,eliminate_blog:blog_id})
+            .then(({data:{blogs}})=>{
+                setSimilarBlogs(blogs);
+            })
             setLoading(false);
-
-            //console.log(blog);
         })
         .catch(err=>{
             console.log(err);
             setLoading(false);
         })
     }
+
     useEffect(()=>{
         resetStates();
-        fetcBlog();
+        fetchBlog();
+
     },[blog_id])
 
     const resetStates=()=>{
@@ -74,94 +66,102 @@ const BlogPage =()=>{
         setLoading(true);
         setLikedByUser(false);
         setCommentsWrapper(false);
-        setTotalParentCommentLoaded(0);
-
+        setTotalParentCommentsLoaded(0);
     }
 
+    const structuredInterview = (Array.isArray(content) ? content[0]?.structured_interview : content?.structured_interview) || null;
+    const blocksList = (Array.isArray(content) ? content[0]?.blocks : content?.blocks) || (Array.isArray(content) ? content : []);
+
     return (
-         <AnimationWrapper>
+        <AnimationWrapper>
             {
-                loading?<Loader/>
-                :
-                <BlogContext.Provider value={{blog,setBlog,islikedByUser,setLikedByUser,commentsWrapper,setCommentsWrapper,totalParentCommentLoaded,setTotalParentCommentLoaded}}>
+                loading ? <Loader/> :
 
-                                    <CommentContainer/>
-                                    <div className="max-w-[900px] center py-10 max-lg:px-[5vw]">
+                <BlogContext.Provider value={{blog,setBlog,islikedByUser,setLikedByUser,commentsWrapper,setCommentsWrapper,totalParentCommentsLoaded,setTotalParentCommentsLoaded}}>
 
-                                            <img src={banner} className="aspect-video"/>
+                    <CommentsContainer/>
 
-                                            <div className="mt-12">
-                                                <h2>{title}</h2>
+                    <div className="max-w-[700px] center py-10 max-lg:px-[5vw]">
+                        <img src={banner} className="aspect-video" />
 
-                                                <div className="flex max-sm:flex-col justify-between my-8">
-                                                    <div className="flex gap-5 items-start">
-                                                        <img src={profile_img} className="w-12 h-12 rounded-full"/>
-                                                        <p className="capitalize">
-                                                            {fullname}
-                                                            <br/>
-                                                            @
-                                                            <Link to={`/user/${author_username}`} className="underline">{author_username}</Link>
-                                                        </p>
-                                                    </div>
-                                                    <p className="text-dark-grey opacity-75 max-sm:mt-6 max-sm:ml-12 max-sm:pl-5"> Published on {getDay(publishedAt)}</p>
-                                                </div>
+                        <div className="mt-12 font-jakarta">
+                            <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
 
-                                            </div>
+                            <div className="flex max-sm:flex-col justify-between my-8">
+                                <div className="flex gap-5 items-start">
+                                    <img src={profile_img} className="w-12 h-12 rounded-full"/>
 
-                                        <BlogInteraction/>
+                                    <p className="capitalize">
+                                        {fullname}
+                                        <br/>
+                                        @
+                                        <Link to={`/user/${author_username}`} className="underline">{author_username}</Link>
+                                    </p>
+                                </div>
+                                <p className="text-dark-grey opacity-75 max-sm:mt-6 max-sm:ml-12 max-sm:pl-5"> Published on {getDay(publishedAt)}</p>
+                            </div>
+                        </div>
 
-                                                <div className="my-12 fnt-gelasio blog-page-content">
+                        <BlogInteraction/>
 
-                                                     {
-                                                         (Array.isArray(content) ? content[0]?.blocks : content?.blocks)?.map((block, i, arr) => (
-                                                             <div key={i}>
-                                                                 <div className="my-4 md:my-8">
-                                                                     <BlogContent block={block} />
-                                                                 </div>
-                                                                 {/* Programmatic Sponsorship Ad Slot In-Between Article Content */}
-                                                                 {i === Math.floor(arr.length / 2) - 1 && (
-                                                                     <div className="my-8 max-w-[700px] mx-auto">
-                                                                         <AdBanner slotId="8888888888" />
-                                                                     </div>
-                                                                 )}
-                                                             </div>
-                                                         ))
-                                                     }
+                        <div className="my-12 font-jakarta blog-page-content">
+                            {/* Structured Predefined Interview Experience Data */}
+                            {structuredInterview && (
+                                <InterviewStructureViewer data={structuredInterview} />
+                            )}
 
-                                                </div>
+                            {/* Standard EditorJS Text Content Blocks */}
+                            {Array.isArray(blocksList) && blocksList.map((block, i, arr) => (
+                                <div key={i}>
+                                    <div className="my-4 md:my-8">
+                                        <BlogContent block={block} />
+                                    </div>
+                                    {/* Programmatic Sponsorship Ad Slot In-Between Article Content */}
+                                    {i === Math.floor(arr.length / 2) - 1 && (
+                                        <div className="my-8 max-w-[700px] mx-auto">
+                                            <AdBanner slotId="8888888888" />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
 
+                        <BlogInteraction/>
 
-                                        <BlogInteraction/>
-                                         {
-                                             similarBlogs != null && similarBlogs.length ?
-                                             <>
-                                                 <h1 className="text-2xl mt-14 mb-8 font-medium">Similar Blogs</h1>
-                                                 <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-none">
-                                                     {
-                                                         similarBlogs.map((blog, i) => {
-                                                             let { author: { personal_info } } = blog;
-                                                             return (
-                                                                 <div key={i} className="min-w-[240px] max-w-[280px] flex-shrink-0">
-                                                                     <AnimationWrapper transition={{ duration: 1, delay: i * 0.08 }}>
-                                                                         <BlogPostCard content={blog} author={personal_info} />
-                                                                     </AnimationWrapper>
-                                                                 </div>
-                                                             )
-                                                         })
-                                                     }
-                                                 </div>
-                                             </>
-                                             : ""
-                                         }
+                        {
+                            similarBlogs!=null && similarBlogs.length ? 
 
-                                
-                                
-                                 </div>
+                            <>
+                                <h1 className="text-2xl mt-14 mb-10 font-medium">Similar Blogs</h1>
+
+                                {
+                                    similarBlogs.map((blog,i)=>{
+                                        let {author:{personal_info}}=blog;
+
+                                        return <AnimationWrapper key={i} transition={{duration:1,delay:i*0.08}}>
+                                                <BlogPostCard content={blog} author={personal_info}/>
+
+                                        </AnimationWrapper>
+
+                                    })
+                                }
+                            
+                            
+                            
+                            
+                            
+                            : ""
+                        }
+
+                    </div>
+
                 </BlogContext.Provider>
                 
+
             }
-         </AnimationWrapper>
+
+        </AnimationWrapper>
     )
 }
 
-export default BlogPage
+export default BlogPage;

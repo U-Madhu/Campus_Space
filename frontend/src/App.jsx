@@ -16,12 +16,14 @@ import Notifications from "./pages/notifications.page";
 import ManagesBlogs from "./pages/manage-blogs.page";
 import AdminBlogs from "./pages/admin-blogs.page";
 import AdminUsers from "./pages/admin-users.page";
+import AdminAnalytics from "./pages/admin-analytics.page";
 import WelcomeModal from "./components/welcome-modal.component";
+import VisitorTracker from "./common/visitor-tracker";
 
 export const UserContext = createContext({});
 
 const App = () => {
-  const [userAuth, setuserAuth] = useState(undefined); // initially undefined
+  const [userAuth, setuserAuth] = useState(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,7 +31,6 @@ const App = () => {
     const parsedUser = userInSession ? JSON.parse(userInSession) : { access_token: null };
     setuserAuth(parsedUser);
 
-    // ✅ Fetch new notification status if token is available
     if (parsedUser?.access_token) {
       fetchNotificationStatus(parsedUser.access_token);
     }
@@ -47,7 +48,6 @@ const App = () => {
 
       const data = await res.json();
 
-      // ✅ Merge notification info into existing userAuth context
       setuserAuth((prev) => ({
         ...prev,
         ...data,
@@ -61,22 +61,33 @@ const App = () => {
 
   return (
     <UserContext.Provider value={{ userAuth, setuserAuth, setUserAuth: setuserAuth }}>
+      <VisitorTracker />
       <WelcomeModal />
       <Routes>
         <Route path="/editor" element={<Editor />} />
         <Route path="/editor/:blog_id" element={<Editor />} />
         <Route path="/" element={<Navbar />}>
           <Route index element={<HomePage />} />
+          
+          {/* User Dashboard */}
           <Route path="dashboard" element={<SideNav />}>
             <Route path="blogs" element={<ManagesBlogs />} />
             <Route path="notifications" element={<Notifications />} />
+          </Route>
+
+          {/* Dedicated Admin Panel */}
+          <Route path="admin-panel" element={<SideNav />}>
+            <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="admin-blogs" element={<AdminBlogs />} />
             <Route path="admin-users" element={<AdminUsers />} />
           </Route>
+
+          {/* User Settings */}
           <Route path="settings" element={<SideNav />}>
             <Route path="edit-profile" element={<EditProfile />} />
             <Route path="change-password" element={<ChangePassword />} />
           </Route>
+
           <Route path="signin" element={<UserAuthForm type="sign-in" />} />
           <Route path="signup" element={<UserAuthForm type="sign-up" />} />
           <Route path="search/:query" element={<SearchPage />} />

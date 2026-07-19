@@ -13,7 +13,8 @@ const PublishForm =()=>{
 
     let {blog_id} =useParams();
 
-    let {blog,blog:{banner,title,tags,des},setEditorState,setBlog}=useContext(EditorContext);
+    let { blog, setEditorState, setBlog } = useContext(EditorContext);
+    let { banner = "", title = "", tags = [], des = "" } = blog || {};
 
     let{userAuth:{access_token}}=useContext(UserContext);
 
