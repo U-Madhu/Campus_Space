@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AnimationWrapper from "../common/page-animation";
 import Loader from "../components/loader.component";
@@ -10,6 +10,8 @@ import CommentContainer, { fetchComments } from "../components/comments.componen
 import axios from "axios";
 import AdBanner from "../components/ad-banner.component";
 import InterviewStructureViewer from "../components/interview-structure-viewer.component";
+import { UserContext } from "../App";
+import { lookInSession } from "../common/session";
 
 export const blogStructure = {
     title: '',
@@ -28,26 +30,46 @@ const BlogPage = () => {
     const [blog, setBlog] = useState(blogStructure);
     const [similarBlogs, setSimilarBlogs] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [errorMsg, setErrorMsg] = useState(null);
     const [islikedByUser, setLikedByUser] = useState(false);
     const [commentsWrapper, setCommentsWrapper] = useState(false);
     const [totalParentCommentsLoaded, setTotalParentCommentsLoaded] = useState(0);
 
     let { title, content, banner, author: { personal_info: { fullname, username: author_username, profile_img } }, publishedAt } = blog;
 
+    let { userAuth } = useContext(UserContext);
+
     const fetchBlog = () => {
-        axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/get-blog', { blog_id })
+        // Synchronously check session storage for token if React Context is still hydrating on new tab open
+        let token = userAuth?.access_token;
+        if (!token) {
+            const sessionUser = lookInSession("user");
+            if (sessionUser) {
+                try {
+                    token = JSON.parse(sessionUser)?.access_token;
+                } catch (e) {}
+            }
+        }
+
+        const headers = token ? { headers: { 'Authorization': `Bearer ${token}` } } : {};
+
+        axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/get-blog', { blog_id }, headers)
             .then(async ({ data: { blog } }) => {
                 blog.comments = await fetchComments({ blog_id: blog._id, setParentCommentCountFun: setTotalParentCommentsLoaded });
                 setBlog(blog);
 
-                axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/search-blogs', { tag: blog.tags[0], limit: 6, eliminate_blog: blog_id })
-                    .then(({ data: { blogs } }) => {
-                        setSimilarBlogs(blogs);
-                    });
+                if (blog.tags && blog.tags.length > 0) {
+                    axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/search-blogs', { tag: blog.tags[0], limit: 6, eliminate_blog: blog_id })
+                        .then(({ data: { blogs } }) => {
+                            setSimilarBlogs(blogs);
+                        })
+                        .catch(() => setSimilarBlogs([]));
+                }
                 setLoading(false);
             })
             .catch(err => {
-                console.log(err);
+                console.error("Failed to fetch blog:", err);
+                setErrorMsg(err.response?.data?.error || "Blog not found or access denied");
                 setLoading(false);
             });
     };
@@ -55,12 +77,13 @@ const BlogPage = () => {
     useEffect(() => {
         resetStates();
         fetchBlog();
-    }, [blog_id]);
+    }, [blog_id, userAuth?.access_token]);
 
     const resetStates = () => {
         setBlog(blogStructure);
         setSimilarBlogs(null);
         setLoading(true);
+        setErrorMsg(null);
         setLikedByUser(false);
         setCommentsWrapper(false);
         setTotalParentCommentsLoaded(0);
@@ -73,6 +96,17 @@ const BlogPage = () => {
         <AnimationWrapper>
             {loading ? (
                 <Loader />
+            ) : errorMsg ? (
+                <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center font-jakarta">
+                    <div className="w-16 h-16 rounded-full bg-red/10 text-red flex items-center justify-center text-2xl mb-4">
+                        <i className="fi fi-rr-lock"></i>
+                    </div>
+                    <h2 className="text-2xl font-bold text-black mb-2">{errorMsg}</h2>
+                    <p className="text-dark-grey text-xs mb-6">This blog post may be private or restricted.</p>
+                    <Link to="/" className="btn-dark px-6 py-2 rounded-full text-xs font-bold">
+                        Return to Home
+                    </Link>
+                </div>
             ) : (
                 <BlogContext.Provider value={{ blog, setBlog, islikedByUser, setLikedByUser, commentsWrapper, setCommentsWrapper, totalParentCommentsLoaded, setTotalParentCommentsLoaded }}>
                     <CommentContainer />

@@ -24,7 +24,7 @@ export const getBlogs = (req, res) => {
 
 export const approveBlog = (req, res) => {
     let { blog_id } = req.body;
-    Blog.findOneAndUpdate({ blog_id }, { approved: true })
+    Blog.findOneAndUpdate({ blog_id }, { approved: true, draft: false })
     .then(blog => {
         if (!blog) {
             return res.status(404).json({ error: "Blog not found" });
@@ -34,6 +34,35 @@ export const approveBlog = (req, res) => {
     .catch(err => {
         return res.status(500).json({ error: err.message });
     });
+};
+
+export const toggleBlogVisibility = async (req, res) => {
+    try {
+        const { blog_id } = req.body;
+        const blog = await Blog.findOne({ blog_id });
+        if (!blog) {
+            return res.status(404).json({ error: "Blog not found" });
+        }
+
+        const isPublic = !blog.draft && blog.approved;
+        
+        if (isPublic) {
+            blog.draft = true;
+        } else {
+            blog.draft = false;
+            blog.approved = true;
+        }
+
+        await blog.save();
+
+        return res.status(200).json({
+            status: "success",
+            isPublic: !blog.draft && blog.approved,
+            message: `Blog status updated to ${!blog.draft && blog.approved ? 'Public' : 'Private'}`
+        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
 };
 
 export const approveBlogLink = (req, res) => {

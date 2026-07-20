@@ -247,41 +247,49 @@ export const getBlog = (req, res) => {
     let { blog_id, draft, mode } = req.body;
     let incrementVal = mode != 'edit' ? 1 : 0;
     
+    let userId = null;
+    let userRole = null;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(" ")[1];
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.SECRET_ACCESS_KEY);
+            userId = decoded.id;
+            userRole = decoded.role;
+        } catch (err) {
+            // ignore token error
+        }
+    }
+
     Blog.findOneAndUpdate({ blog_id }, { $inc: { "activity.total_reads": incrementVal } })
     .populate("author", "personal_info.fullname personal_info.profile_img personal_info.username")
-    .select("title des content banner activity publishedAt blog_id tags approved")
+    .select("title des content banner activity publishedAt blog_id tags approved draft author")
     .then(blog => {
         if (!blog) {
             return res.status(404).json({ error: "Blog not found" });
         }
-        User.findOneAndUpdate({ "personal_info.username": blog.author.personal_info.username }, {
-            $inc: { "account_info.total_reads": incrementVal }
-        })
-        .catch(err => {
-            return res.status(500).json({ error: err.message });
-        });
+
+        if (blog.author && blog.author.personal_info) {
+            User.findOneAndUpdate({ "personal_info.username": blog.author.personal_info.username }, {
+                $inc: { "account_info.total_reads": incrementVal }
+            })
+            .catch(err => console.error("Error updating user total_reads:", err.message));
+        }
+
+        const authorIdStr = blog.author && (blog.author._id ? blog.author._id.toString() : blog.author.toString());
+        const isAuthor = userId && authorIdStr && authorIdStr === userId.toString();
+        const isAdmin = userRole === 'admin';
         
+        // Private / Draft blog permissions check: allow Author and Admin
         if (blog.draft && !draft) {
-            return res.status(500).json({ error: 'you can not access draft blogs' });
+            if (!isAuthor && !isAdmin) {
+                return res.status(403).json({ error: 'You cannot access private draft blogs' });
+            }
         }
 
         // Enforce approval flow security
         if (!blog.draft && !blog.approved) {
-            let userId = null;
-            let userRole = null;
-            const authHeader = req.headers['authorization'];
-            const token = authHeader && authHeader.split(" ")[1];
-            if (token) {
-                try {
-                    const decoded = jwt.verify(token, process.env.SECRET_ACCESS_KEY);
-                    userId = decoded.id;
-                    userRole = decoded.role;
-                } catch (err) {
-                    // ignore
-                }
-            }
-
-            if (userRole !== 'admin' && blog.author._id.toString() !== userId) {
+            if (!isAdmin && !isAuthor) {
                 return res.status(403).json({ error: "This blog is pending admin approval." });
             }
         }

@@ -1,18 +1,20 @@
-
 const storeInSession = (key, value) => {
-    return sessionStorage.setItem(key, value);
-}
+    sessionStorage.setItem(key, value);
+    localStorage.setItem(key, value);
+};
 
-const lookInSession=(key)=>{
-    return sessionStorage.getItem(key)
-}
+const lookInSession = (key) => {
+    return sessionStorage.getItem(key) || localStorage.getItem(key);
+};
 
-const removeFromSession=(key)=>{
-    return sessionStorage.removeItem(key)
-}
+const removeFromSession = (key) => {
+    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
+};
 
-const logOutUser=()=>{
+const logOutUser = () => {
     sessionStorage.clear();
-}
+    localStorage.clear();
+};
 
-export {storeInSession,lookInSession,removeFromSession,logOutUser}
+export { storeInSession, lookInSession, removeFromSession, logOutUser };
