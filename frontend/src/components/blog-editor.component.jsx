@@ -315,9 +315,21 @@ const BlogEditor = () => {
 
                         {/* Content Container */}
                         <div className="my-10 font-jakarta blog-page-content leading-relaxed text-black">
-                            {previewContent?.structured_interview && (
-                                <InterviewStructureViewer data={previewContent.structured_interview} />
-                            )}
+                            {(() => {
+                                const si = previewContent?.structured_interview;
+                                if (!si) return null;
+                                const hasRounds = si.selection_process?.rounds && Object.keys(si.selection_process.rounds).length > 0;
+                                const hasNotes = si.selection_process?.notes && si.selection_process.notes.trim().length > 0;
+                                const hasCoding = si.coding?.questions && si.coding.questions.length > 0;
+                                const hasCore = si.core_concepts?.questions && si.core_concepts.questions.length > 0;
+                                const hasProj = si.project_related?.questions && si.project_related.questions.length > 0;
+                                const hasPers = si.personality_related?.questions && si.personality_related.questions.length > 0;
+                                const isEmpty = !(hasRounds || hasNotes || hasCoding || hasCore || hasProj || hasPers);
+                                
+                                return blogType === "interview" && !isEmpty ? (
+                                    <InterviewStructureViewer data={si} />
+                                ) : null;
+                            })()}
 
                             {previewContent?.blocks && previewContent.blocks.map((block, i) => (
                                 <div key={i} className="my-4 md:my-8">
