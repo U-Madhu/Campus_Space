@@ -24,6 +24,11 @@ We have recently upgraded the platform with enterprise-grade features that demon
 - **Manage Users**: Admins can search users by username/email, promote/demote accounts (to/from Admin), and permanently delete users (with recursive clean-ups of their data).
 - **Manage Blogs**: Admins can view, search, delete, and approve posts. Shows detailed **Status** (Live/Pending) and **Visibility** (Public/Private).
 
+### 🛡️ API Rate Limiting & DoS Protection
+- **Brute-Force Shield**: Enforces a strict rate limit of **5 requests per 15 minutes** on authentication endpoints (`/signup`, `/signin`, `/google-auth`).
+- **DoS Mitigation**: Enforces a general rate limit of **100 requests per 15 minutes** on all public and transactional REST routes.
+- **Reverse Proxy Support**: Configured Express proxy trust settings for accurate IP detection behind cloud load balancers.
+
 ### 📧 Automated Email & Approval Workflow
 - **Nodemailer SMTP Integration**: When a user publishes a post, an automated HTML email is instantly sent to the administrator.
 - **One-Click Email Approval**: The admin email contains a secure, direct link. Clicking it from their email inbox instantly approves the post, making it live for everyone without logging into the portal.
@@ -160,6 +165,7 @@ npm run dev
 | `/admin/blogs` | `POST` | Fetch all blogs (paginated) | Yes (Admin) |
 | `/admin/approve-blog` | `POST` | Approve blog | Yes (Admin) |
 | `/admin/approve-blog-link/:blog_id` | `GET` | Direct email approval link | No |
+| `/admin/toggle-blog-visibility` | `POST` | Toggle blog visibility (Public/Private) | Yes (Admin) |
 | `/admin/delete-blog` | `POST` | Delete any blog | Yes (Admin) |
 | `/admin/users` | `POST` | Fetch all users (paginated) | Yes (Admin) |
 | `/admin/change-role` | `POST` | Promote/Demote user role | Yes (Admin) |
