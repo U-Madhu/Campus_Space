@@ -8,7 +8,6 @@ import User from "./models/User.js";
 import Blog from "./models/Blog.js";
 
 const server = express();
-server.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 server.use(express.json());
