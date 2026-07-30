@@ -47,6 +47,11 @@ mongoose.connect(process.env.DB_LOCATION, {
 })
 .catch(err => console.log("Database connection failed:", err.message));
 
+// root endpoint
+server.get("/", (req, res) => {
+    return res.status(200).json({ status: "OK", message: "Campus Space API is active" });
+});
+
 // health check endpoint
 server.get("/healthcheck", (req, res) => {
     return res.status(200).json({ status: "OK", message: "Server is healthy", timestamp: new Date() });
