@@ -21,7 +21,7 @@ const HomePage = () => {
 
     let [pageState,setPageState]=useState('home')
 
-    let categories=["interview","scholrships","cs","ec","travel","eee"]
+    let categories = ["interview", "scholarships", "cs", "ec", "travel", "eee"];
 
 
 
@@ -165,12 +165,12 @@ const HomePage = () => {
                                 <div className="flex flex-col gap-10">
                                             <div>
                                                             <h1 className="font-medium text-xl mb-8">
-                                                                Stories from all intrests
+                                                                Stories from all interests
                                                             </h1>
                                                             <div className="flex gap-3 flex-wrap">
                                                                 {
                                                                         categories.map((category,i)=>{
-                                                                            return <button onClick={loadBlogByCategory} className={"tag "+(pageState==category ?"bg-black text-white ":"" )} key={i}>
+                                                                            return <button onClick={loadBlogByCategory} className={"tag capitalize "+(pageState==category ?"bg-black text-white ":"" )} key={i}>
                                                                                             {category}
                                                                                     </button>
                                                                         })

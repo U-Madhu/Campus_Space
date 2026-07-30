@@ -17,7 +17,7 @@ const BlogPostCard = ({ content, author }) => {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                     alt={title}
                 />
-                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-black text-[10px] font-bold py-0.5 px-2 rounded-full shadow-sm">
+                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-black text-[10px] font-bold py-0.5 px-2 rounded-full shadow-sm capitalize">
                     {tags[0]}
                 </span>
             </div>
